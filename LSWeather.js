@@ -54,9 +54,9 @@ const WEATHER_API_KEY = '';
 const CALENDAR_SHOW_CALENDARS = true;
 const CALENDAR_SHOW_ALL_DAY_EVENTS = true;
 const CALENDAR_SHOW_TOMORROW_EVENTS = true;
-const CALENDAR_WORK_CALENDARS = ['']; // Leave blank if you don't want to display any work calendar
+const CALENDAR_WORK_CALENDARS = []; // Leave blank if you don't want to display any work calendar
 const CALENDAR_WORK_MAX_EVENTS = 3;
-const CALENDAR_PERSONAL_CALENDARS = ['']; // Leave blank for using defualt iOS Calendar
+const CALENDAR_PERSONAL_CALENDARS = []; // Leave blank for using defualt iOS Calendar
 const CALENDAR_PERSONAL_MAX_EVENTS = 3;
 const CALENDAR_NO_EVENTS_TEXT = 'No Upcoming Events';
 const CALENDAR_NOT_SET_TEXT = 'Calendar Not Set';
@@ -988,13 +988,15 @@ async function fetchCalendar() {
   }
   
   // Fetch all work calendar events for today and tomorrow
-  for (const calendarName of CALENDAR_WORK_CALENDARS) {
-    const calendar = await Calendar.forEventsByTitle(calendarName);
-    const todayEvents = await CalendarEvent.today([calendar]);
-    for (const e of todayEvents) wEventsToday.push(e);
-    if (CALENDAR_SHOW_TOMORROW_EVENTS) {
-      const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
-      for (const e of tomorrowEvents) wEventsTomorrow.push(e);
+  if (CALENDAR_WORK_CALENDARS.length > 0) {
+    for (const calendarName of CALENDAR_WORK_CALENDARS) {
+      const calendar = await Calendar.forEventsByTitle(calendarName);
+      const todayEvents = await CalendarEvent.today([calendar]);
+      for (const e of todayEvents) wEventsToday.push(e);
+      if (CALENDAR_SHOW_TOMORROW_EVENTS) {
+        const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
+        for (const e of tomorrowEvents) wEventsTomorrow.push(e);
+      }
     }
   }
   
