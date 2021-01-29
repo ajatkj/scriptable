@@ -1,6 +1,7 @@
 # LSWeather
 A Scriptable script to add weather & calendar information on the lock screen. The script is meant to be called from Shortcuts app.
-It is fully customizable script giving you access to change each data element on the lock screen.
+It is fully customizable script giving you access to change each data element on the lock screen. 
+The script generates an overlay image which is embedded on top of a wallpaper.
 
 ![](images/LSWeather.png) ![](images/LSWeather_welcome.png)
 ![](images/LSWeather_showMyWork.png) ![](images/LSWeather_feelMotivated.png)
@@ -8,6 +9,7 @@ It is fully customizable script giving you access to change each data element on
 
 ## Features
 1. Shows weather, calendar and random quote on the lock screen.
+1. Fully automated. Create Automations to run this script/shortcut every hour to get most recent information on your lock screen without manual intervention.
 1. Choose from many pre-defined layouts or create your own layout.
 1. Use custom SF symbols for weather icons.
 1. Supports multiple calendars and configure 2 separate sections of calendars for *work* and *personal* events.
@@ -29,19 +31,29 @@ iCloud Drive/
 │  ├─ LSWeather.js
 ```
 1. Launch Scriptable and make sure that `LSWeather` is listed in the Scripts view.
+1. Run the script to check if its working properly. A quicklook window with the default layout overlay will open.
 1. Create an Album in Photos with name **WeatherLS**.
 1. Add *some* wallpapers to this Album.
-1. Download and install this [shortcut](https://www.icloud.com/shortcuts/698885e96ac5445c9d9125655a90300f).
+1. Download and install this [shortcut](https://www.icloud.com/shortcuts/1e99eca2edb0418fb1ad6ee9ccf1312d).
+1. Configure the shortcut as mentioned below.
 1. Run the shortcut.
+
+## Shortcut Configuration
+1. Open the shortcut in Shortcuts app. 
+1. Set the dictionary key value `layout` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'mimimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
+1. Set the dictionary key value `apiKey` to your openWeather API key.
+   - Note: if `layout` and `apiKey` are not passed from Shortcuts app, it should be defined in the LSWeather script.
 
 ## Script Configuration
 1. OpenWeather API
    - Open the script in the Scriptable editor and add your openweather API key at `const WEATHER_API_KEY = `
    - Get your own API key for free [here](https://home.openweathermap.org/api_keys). Account is needed.
+   - Note: Value passed from Shortcuts app will over-ride the API key value set in the script.
 
 1. Template
    - Set `LAYOUT` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'mimimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
    - Or use your customer layout by setting `LAYOUT = 'custom'`.
+   - Note: Value passed from Shortcuts app will over-ride values set in the script.
    
 1. Configure Weather Details
    - To show/hide weather details set `WEATHER_SHOW_WEATHER` to `true` or `false`. Hiding weather details will not call the openweather API.
@@ -70,11 +82,6 @@ iCloud Drive/
      - You can get list of all valid tags [here](https://api.quotable.io/tags).
    - To change maximum length of quotes to be fetched set `QUOTE_MAX_LENGTH`.
    - To change quotes wrap length set `QUOTE_WRAP_LENGTH`. 
-
-1. To test the script from Scriptable app i.e. without setting up the shortcut
-   - Create a folder **LSWallpapers** in iCloud/Scriptable.
-   - Copy a wallpaper file and rename it to **wallpaper.jpg**.
-   - The script will create a new wallpaper called **lswallpaper.jpg** in the same location.
 
 1. To test the script without calling the openweather & quotable APIs set `TESTING` to `true`.
 
@@ -113,6 +120,4 @@ Below widgets/scripts have helped while coding for this script.
 
 ## Known Issues
 
-1. Sometimes the script fails to complete and also doesn't throw an error. This could be a problem with particular wallpaper or due to insufficient memory. Run the shortcut again or try with different wallpaper.
-1. At this point the set-up cannot be completely automated because of iOS restrictions. If anybody is able to figure it out, drop me an email. Would love to see this work.
-1. I have added a step in the shortcut to convert the image to lower quality so that the x-callback works properly. While using full quality images, there are more than 50% chances that shortcut will fail. With reduced quality image, it works 100% of the time.
+1. The API quotable is sometimes slow and doesn't respond on time. You can set `const QUOTE_SHOW_QUOTES = 'false'` to stop using this API if you are facing this problem.

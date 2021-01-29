@@ -3,31 +3,8 @@ Script: LSWeather.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
 Date: 27.01.2021
 ------------------------------------------------------------------------------------------------------*/
-// TODO: Replace the x-callback logic with Photos when Scriptable is updated to use specific albums in Photos
-
-// This script takes a wallpaper as an input and generates a wallpaper with weather, calendar & other details. 
+// This script generates an overlay image with weather, calendar & other details. 
 // The script is meant to be called from a Shortcut. 
-
-// When run from a Shortcuts app-
-// The script is expected to be called using x-callback URL with 2 parameters - "image" and "mode". 
-// "image" is a Base64 encoded string which is decoded back to an image in the script.
-// "mode" value can be dark or light depending on the colors in your wallpaper.
-// The script then modifies the image to add weather details and encondes it to Base64 string and calls the Shortcut using "newImage" parameter (x-success).
-// In case of an error (x-error), appropriate error message is sent back to the Shortcuts app.
-// Note: Sometimes the script doesn't do anything for some wallpapers. This is probably due to the wallpaper itself. But if someone figures it out, send out an email to me.
-
-// When run from Scriptables app- (This is only meant for testing while changing the layout)
-// Create a folder called Wallpapers within your iCloud/Scriptables folder. Place (.jpg) wallpaper and rename it to wallpaper.jpg
-// The script will create the modified wallpaper lswallpaper.jpg in the same location
-
-// Script configuration-
-// To run the script an openweather API key is required. Get your own API key for free at: https://home.openweathermap.org/WEATHER_API_KEYs (account needed).
-// Change the value of WEATHER_UNITS and WEATHER_LANG below as required. You can get valid values of WEATHER_UNITS & WEATHER_LANG at https://openweathermap.org/api/one-call-api.
-// Change the values in the "layout" dictionary as per your liking. All relevant details are mentioned below.
-
-// Below values are used when run from Scritapble app
-const WALLPAPER_PATH = "LSWallpapers";
-const WALLPAPER_NAME = "wallpaper.jpg";
 
 // Logging parameters
 const LOG_FILE_NAME = "LSWeather.txt";
@@ -37,7 +14,7 @@ let LOG_STEP = 1;
 // ============================================== CONFIGURABLE SECTION (START) ============================================== //
 
 // Testing - set this to true if you don't want to call the API but test the layout with dummy data
-const TESTING = true;
+const TESTING = false;
 
 // Constants for openweather API call, change as per your requirement
 const WEATHER_SHOW_WEATHER = true;
@@ -48,7 +25,7 @@ const WEATHER_LANG = 'en';
 const WEATHER_EXCLUDE = 'minutely,hourly,alerts';
 
 // API key for openweather. 
-const WEATHER_API_KEY = '';
+let WEATHER_API_KEY = '';
 
 // Constants for Calender Data
 const CALENDAR_SHOW_CALENDARS = true;
@@ -63,13 +40,13 @@ const CALENDAR_NOT_SET_TEXT = 'Calendar Not Set';
 
 // Constants for Quotes
 // You can find all available tags at https://api.quotable.io/tags
-const QUOTE_SHOW_QUOTES = true;
+const QUOTE_SHOW_QUOTES = false;
 const QUOTE_TAGS = ['wisdom','friendship'];
 const QUOTE_MAX_LENGTH = 100; // Maximum characters of quote to be fetched, shorter quotes look better than big quotes on lock screen
 const QUOTE_WRAP_LENGTH = 50; // Wrap quote at this length. Words are not broked, text is wrapped before word is broken
 
-// Some predefined layouts - 'custom','welcome','minimalWeather','feelMotivated','mimimalCalendar','showMyWork';
-const LAYOUT = 'welcome';
+// Some predefined layouts - 'custom','welcome','minimalWeather','feelMotivated','mimimalCalendar','showMyWork' and 'maximalWeather';
+let LAYOUT = 'welcome';
 
 let welcome = {
   welcomeGreeting: {source: "function", key: "greetingText()", prefix: "", suffix: "", x: "center", y: "center - 150", w: "full", h: 100, font: "veryLarge", color: "light",  align: "center", hide: 0},
@@ -180,10 +157,7 @@ let custom = {
 // ============================================== CONFIGURABLE SECTION (END) ============================================== //
 
 let layout;
-let WALLPAPER;
-let useShortcut = false;
 let useDarkColor = false;
-let success = true;
 let errMsg;
 
 const LIGHT_COLOR = "#FFFFFF";
@@ -291,122 +265,63 @@ const unknownCalendarData = {
   wEventsTomorrowCount: 0,
 }
 
-let inputParams = args.queryParameters;
+if (!config.runsInApp) {
+  let inputParams = args.shortcutParameter;
+  if (inputParams.layout) LAYOUT = inputParams.layout;
+  if (inputParams.apiKey) WEATHER_API_KEY = inputParams.apiKey;
+}
 
 const DEVICE_RESOLUTION = Device.screenResolution();
 const DEVICE_SCALE = Device.screenScale();
 
 /* Start script */
 
-// Check where is the script called from
-if (typeof inputParams["image"] == "undefined") 
-  useShortcut = false;
-else useShortcut = true;  // if called from Shortcuts app using x-callback
-
-// check if script is called from a shortcut for light wallpapers or dark wallpapers
-if (typeof inputParams["mode"] == "undefined") {
-  useDarkColor = false;
-}
-else if (inputParams["mode"] == "dark") // mode is w.r.t. the wallpaper. i.e. dark for dark wallpapers
-  useDarkColor = false;
-else useDarkColor = true;
-
-if (!useShortcut) { // if called from Scriptable app
-  writeLOG("Running script in APP");
-  WALLPAPER = await fetchWallpaper();
-} else {
-  writeLOG("Running script from Shortcut");
-  let inputBase64String = inputParams["image"];
-  writeLOG("Input base64 string: " + inputBase64String);
-  // convert to raw data
-  const rawWallpaper = Data.fromBase64String(inputBase64String);
-  if (rawWallpaper === null) {
-    errMsg = "Error_covert_Base64_String"
-    writeLOG(errMsg);
-    callBackError(inputParams);
-  }
-  // convert to image
-  WALLPAPER = Image.fromData(rawWallpaper);
-  if (WALLPAPER === null) {
-    errMsg = "Error_convert_Data_to_Image"
-    writeLOG(errMsg);
-    callBackError(inputParams);
-  }
-}
-
 const calendarData = await fetchCalendar();
 const weatherData = await fetchWeather();
 const quotesData = await fetchQuotes();
-
+let overlayImage;
+let overlayBase64String;
 try {
   await updateLayout(weatherData.isNight, weatherData.weatherID);
-  const newWallapaper = await createNewWallpaper(WALLPAPER, weatherData, calendarData, quotesData);
-  if (!useShortcut) {
-    saveWallpaper(newWallapaper);     // This will mark end of the script if successsful
-  } else {
-    encodeWallpaper(newWallapaper);   // This will mark end of the script if successful
-  }
+  overlayImage = await createOverlay(weatherData, calendarData, quotesData);
+  overlayBase64String = encodeOverlayImage(overlayImage);   // This will mark end of the script if successful
 } catch (error) {
   errMsg = "Main_" + error.message.replace(/\s/g,"_");
   writeLOG(errMsg);
-  if (useShortcut) {
-    callBackError(inputParams);  // Call the Shortcuts app with appropriate error message
-  } else {
-    Script.complete();
-  }
+  Script.complete();
 }
+if (config.runsInApp) {
+  QuickLook.present(overlayImage);
+  Script.complete();
+} else return overlayBase64String; // return to Shortcuts
 
 /*------------------------------------------------------------------------------------------------------------------
 *                                               FUNCTION DEFINITION
 ------------------------------------------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------
-FUNCTION fetchWallpaper
+FUNCTION encodeOverlayImage
 ------------------------------------------------------------------*/
-// Function to fetch the wallpaper from iCloud - This is used when the script is run from App
-async function fetchWallpaper(){
-  const fm = FileManager.iCloud();
-  const cachePath = fm.joinPath(fm.documentsDirectory(), WALLPAPER_PATH);
-  const imgFile = fm.joinPath(cachePath,WALLPAPER_NAME);
-  return Image.fromFile(imgFile);
-}
-/*------------------------------------------------------------------
-FUNCTION saveWallpaper
-------------------------------------------------------------------*/
-// Function to save the wallpaper in iCloud - This is used when the script is run from App
-async function saveWallpaper(newWallapaper){
-  const fm = FileManager.iCloud();
-  const cachePath = fm.joinPath(fm.documentsDirectory(), WALLPAPER_PATH);
-  const imgFile=fm.joinPath(cachePath,"ls" + WALLPAPER_NAME);
-  fm.writeImage(imgFile,newWallapaper);
-  writeLOG("Wallpaper saved successfully");
-  Script.complete();
-}
-/*------------------------------------------------------------------
-FUNCTION encodeWallpaper
-------------------------------------------------------------------*/
-function encodeWallpaper(newWallapaper){
-  let newBase64String;
+function encodeOverlayImage(overlayImage){
+  let overlayBase64String;
   try {
-    const newRawWallpaper = Data.fromPNG(newWallapaper);
-    if (newRawWallpaper === null) {
+    const rawOverlay = Data.fromPNG(overlayImage);
+    if (rawOverlay === null) {
       errMsg = "Error_convert_Image_to_Data";
       writeLOG(errMsg);
       return;
     }
-    newBase64String = newRawWallpaper.toBase64String();
-    if (newBase64String === null) {
+    overlayBase64String = rawOverlay.toBase64String();
+    if (overlayBase64String === null) {
       errMsg = "Error_convert_Data_to_Base64String";
       writeLOG(errMsg);
       return;
     }
   } catch(error) {
-    errMsg = "encodeWallpaper_" + error.message.replace(/\s/g,"_");
+    errMsg = "encodeOverlayImage_" + error.message.replace(/\s/g,"_");
     writeLOG(errMsg);
-    callBackError(inputParams);
     return;
   }
-
-  callBackSucess(inputParams, newBase64String);
+  return overlayBase64String;
 }
 /*------------------------------------------------------------------
 FUNCTION fetchWeather
@@ -417,6 +332,7 @@ async function fetchWeather(){
   if (TESTING) return defaultWeatherDataForTesting;
 
   let response;
+  let isNight;
 
   Location.setAccuracyToThreeKilometers();
   locationData = await Location.current();
@@ -433,9 +349,16 @@ async function fetchWeather(){
       writeLOG(`Couldn't fetch ${weatherURL}`);
       return unknownWeatherData;
   }
-  writeLOG("JSON Data: " + JSON.stringify(response));
-  const currentTime = new Date().getTime() / 1000;
-  const isNight = currentTime >= response.current.sunset || currentTime <= response.current.sunrise;
+  try {
+    if (response.cod == 401) {
+      writeLOG('Invalid API Key');
+      return unknownWeatherData;
+    }
+  } catch(error) {
+    writeLOG("JSON Data: " + JSON.stringify(response));
+    const currentTime = new Date().getTime() / 1000;
+    isNight = currentTime >= response.current.sunset || currentTime <= response.current.sunrise;
+  }
 
   return {
     loc: address[0].locality.toUpperCase(),
@@ -476,14 +399,14 @@ async function getWeatherIcon(iconID, isNight){
   }
 }
 /*------------------------------------------------------------------
-FUNCTION createNewWallpaper
+FUNCTION createOverlay
 ------------------------------------------------------------------*/
-async function createNewWallpaper(wallpaper, weatherData, calendarData, quotesData) {
+async function createOverlay(weatherData, calendarData, quotesData) {
   try {
     let imgCanvas=new DrawContext();
+    imgCanvas.opaque = false;
     imgCanvas.size = DEVICE_RESOLUTION;
     const mainRect = new Rect(0,0,DEVICE_RESOLUTION.width,DEVICE_RESOLUTION.height);
-    imgCanvas.drawImageInRect(wallpaper,mainRect);
     
     // Place elements on wallpaper
     let x, y, w, h, rect, font, color, iconImage;
@@ -579,7 +502,7 @@ async function createNewWallpaper(wallpaper, weatherData, calendarData, quotesDa
     }
     newImage=imgCanvas.getImage();
   } catch (error) {
-    errMsg = "createNewWallpaper_" + error.message.replace(/\s/g,"_");
+    errMsg = "createOverlay_" + error.message.replace(/\s/g,"_");
     writeLOG(errMsg);
     return;
   }
@@ -1188,7 +1111,7 @@ async function getTextWidth(text, font){
 FUNCTION writeLOG
 ------------------------------------------------------------------*/
 async function writeLOG(logMsg){
-  if (useShortcut) {
+  if (!config.runsInApp) {
     const fm = FileManager.iCloud();
     let logPath = fm.joinPath(fm.documentsDirectory(), LOG_FILE_PATH);
     if (!fm.fileExists(logPath)) fm.createDirectory(logPath);
@@ -1283,24 +1206,4 @@ function calendarText(calendarData) {
   );
   const text0 = wrapText(text,50);
   return text0;
-}
-/*------------------------------------------------------------------
-FUNCTION callBackError
-------------------------------------------------------------------*/
- function callBackError(){
-  const callbackBaseURL = inputParams["x-error"]
-  const callBackURL = callbackBaseURL + "?errorMessage=" + errMsg;
-  writeLOG("callBackURL Error :" + callBackURL);
-  Safari.open(callBackURL);
-  Script.complete();
- }
-/*------------------------------------------------------------------
-FUNCTION callBackSucess
-------------------------------------------------------------------*/
-function callBackSucess(inputParams, newBase64String){
-  const callbackBaseURL = inputParams["x-success"]
-  const callBackURL = callbackBaseURL + "?newImage=" + newBase64String;
-  writeLOG("callBackURL Success :" + callBackURL);
-  Safari.open(callBackURL);
-  Script.complete();
 }
