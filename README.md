@@ -42,7 +42,7 @@ iCloud Drive/
      - Create a folder in iCloud -> Shortcuts with the name **LSWeather**.
      - Add *some* wallpapers to this folder.
      - Shortcut will automatically pick up a wallpaper at random from this folder.
-1. Download and install this [shortcut](https://www.icloud.com/shortcuts/1e99eca2edb0418fb1ad6ee9ccf1312d).
+1. Download and install this [shortcut](https://routinehub.co/shortcut/8282/).
 1. Configure the shortcut as mentioned below.
 1. Run the shortcut.
 

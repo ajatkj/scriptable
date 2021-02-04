@@ -1289,7 +1289,6 @@ FUNCTION checkUpdates
 async function checkUpdates(){
   // Version info
   const VERSION = "2.1"; // DO NOT CHANGE THIS VALUE
-  // version data is stored in the format {version: version, releaseDate: releaseDate, changeLog: changeLog}
   if (UPDATE_CHECK_DAYS == 0) return false;
   versionURL = 'https://raw.githubusercontent.com/ajatkj/scriptable/master/lib/LSWeatherVersionInfo.json';
   let updateRequired = false;
