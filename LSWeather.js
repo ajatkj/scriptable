@@ -1,15 +1,42 @@
 /*------------------------------------------------------------------------------------------------------
 Script: LSWeather.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
-Date: 27.01.2021
+Date: 04.02.2021
+Version: 2.1
 ------------------------------------------------------------------------------------------------------*/
 // This script generates an overlay image with weather, calendar & other details. 
 // The script is meant to be called from a Shortcut. 
+
+// Colors
+aqua0 = "#8ec07c";
+aqua1 = "#427b58";
+red0 = "#fb4934";
+red1 = "#9d0006"
+yellow0 = "#b8bb26";
+yellow1 = "#b57614";
+green0 = "#b8bb26";
+green1 = "#79740e";
+blue0 = "#83a598";
+blue1 = "#076678";
+purple0 = "#d3869b";
+purple1 = "#8f3f71";
+orange0 = "#fe8019";
+orange1 = "#af3a03";
+darkGrey0 = "#1d2021";
+darkGrey1 = "#282828";
+darkCream0 = "#a89984"; 
+darkCream1 = "#bdae93";
+cream0 = "#ebdbb2";
+cream1 = "#f9f5d7";
+white = "#ffffff";
+black = "#000000";
 
 // Logging parameters
 const LOG_FILE_NAME = "LSWeather.txt";
 const LOG_FILE_PATH = "LSWeatherLogs";
 let LOG_STEP = 1;
+
+const UPDATE_CHECK_DAYS = 7; // Check updates every 7 days, set 0 to stop update check
 
 // ============================================== CONFIGURABLE SECTION (START) ============================================== //
 
@@ -31,12 +58,14 @@ let WEATHER_API_KEY = '';
 const CALENDAR_SHOW_CALENDARS = true;
 const CALENDAR_SHOW_ALL_DAY_EVENTS = true;
 const CALENDAR_SHOW_TOMORROW_EVENTS = true;
-const CALENDAR_WORK_CALENDARS = []; // Leave blank if you don't want to display any work calendar
+const CALENDAR_SHOW_COLORS = true;
+const CALENDAR_WORK_CALENDARS = ['Gmail','Tithis','Arsenal FC']; // Leave blank if you don't want to display any work calendar
 const CALENDAR_WORK_MAX_EVENTS = 3;
-const CALENDAR_PERSONAL_CALENDARS = []; // Leave blank for using defualt iOS Calendar
+const CALENDAR_PERSONAL_CALENDARS = ['Weather','Calendar','IN Holidays']; // Leave blank for using defualt iOS Calendar
 const CALENDAR_PERSONAL_MAX_EVENTS = 3;
 const CALENDAR_NO_EVENTS_TEXT = 'No Upcoming Events';
 const CALENDAR_NOT_SET_TEXT = 'Calendar Not Set';
+const CALENDAR_COLORS = [aqua0,red0,yellow0,green0,blue0,purple0,orange0,darkGrey0,darkCream0,cream0]; // Colors for Calendars picked up in serial order
 
 // Constants for Quotes
 // You can find all available tags at https://api.quotable.io/tags
@@ -45,14 +74,16 @@ const QUOTE_TAGS = ['wisdom','friendship'];
 const QUOTE_MAX_LENGTH = 100; // Maximum characters of quote to be fetched, shorter quotes look better than big quotes on lock screen
 const QUOTE_WRAP_LENGTH = 50; // Wrap quote at this length. Words are not broked, text is wrapped before word is broken
 
-// Some predefined layouts - 'custom','welcome','minimalWeather','feelMotivated','mimimalCalendar','showMyWork' and 'maximalWeather';
-let LAYOUT = 'welcome';
+// Some predefined layouts - 'custom','welcome','minimalWeather','feelMotivated','minimalCalendar','showMyWork' and 'maximalWeather';
+let LAYOUT = 'minimalCalendar';
 
 let welcome = {
   welcomeGreeting: {source: "function", key: "greetingText()", prefix: "", suffix: "", x: "center", y: "center - 150", w: "full", h: 100, font: "veryLarge", color: "light",  align: "center", hide: 0},
   welcomeClimate: {source: "function", key: "weatherText(weatherData)", prefix: "", suffix: "", x: "center", y: "center", w: "full", h: 100, font: "medium", color: "light",  align: "center", hide: 0},
-  welcomeTemp: {source: "weather", key: "temp", prefix: "SFSymbol|weatherID", suffix: "temperature", x: "center", y: "center + 150", w: 100, h: 120, font: "extraLarge", color: "light",  align: "center"},
+  welcomeTemp: {source: "weather", key: "temp", prefix: "SFSymbol|weatherID", suffix: "temperature", x: "center", y: "center + 150", w: 300, h: 120, font: "extraLarge", color: "light",  align: "center"},
   welcomeCalendar: {source: "function", key: "calendarText(calendarData)", prefix: null, suffix: null, x: "center", y: "center + 300", w: "full", h: 120, font: "small", color: "light",  align: "center"},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
 };
 
 let minimalWeather = {
@@ -63,10 +94,13 @@ let minimalWeather = {
   wind: {source: "weather", key: "wind", prefix: "SFSymbol|wind", suffix: "speed", x: -100, y: 280, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center"},
   sunrise: {source: "weather", key: "sunrise", prefix: "SFSymbol|sunrise.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
 };
 
 let feelMotivated = {
   quotewithAuthor: {source: "quote", key: "quoteWithAuthor", prefix: "", suffix: "", x: "right_margin", y: 2050, w: "full", h: 50, font: "small", color: "light",  align: "center", hide: 0},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2}
 };
 
 let showMyWork = {
@@ -77,10 +111,12 @@ let showMyWork = {
   wind: {source: "weather", key: "wind", prefix: "SFSymbol|wind", suffix: "speed", x: -100, y: 280, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center"},
   sunrise: {source: "weather", key: "sunrise", prefix: "SFSymbol|sunrise.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
-  personalText: {source: "text", key: "H O M E", prefix: "SFSymbol|house", suffix: "", x: "left_margin", y: 940, w: "half", h: 60, font: "large", color: "light",  align: "center", hide: 0},
-  personalEvents: {source: "calendar", key: "personalEvents", prefix: "", suffix: "", x: "left_margin", y: 1020, w: "half", h: 50, font: "extraSmall", color: "light",  align: "center", hide: 0},
-  workText: {source: "text", key: "W O R K", prefix: "SFSymbol|desktopcomputer", suffix: "", x: "right_margin", y: 940, w: "half", h: 60, font: "large", color: "light",  align: "center", hide: 0},
-  workEvents: {source: "calendar", key: "workEvents", prefix: "", suffix: "", x: "right_margin", y: 1020, w: "half", h: 50, font: "extraSmall", color: "light",  align: "center", hide: 0},
+  personalText: {source: "text", key: "H O M E", prefix: "SFSymbol|house", suffix: "", x: "left_margin", y: "top_margin + 1000", w: "half", h: 60, font: "large", color: "light",  align: "center", hide: 0},
+  personalEvents: {source: "calendar", key: "personalEvents", prefix: null, suffix: "", x: "left_margin", y: "top_margin + 1100", w: "half", h: 60, font: "small", color: "light",  align: "center", hide: 0},
+  workText: {source: "text", key: "W O R K", prefix: "SFSymbol|desktopcomputer", suffix: "", x: "right_margin", y: "top_margin + 1000", w: "half", h: 60, font: "large", color: "light",  align: "center", hide: 0},
+  workEvents: {source: "calendar", key: "workEvents", prefix: null, suffix: "", x: "right_margin", y: "top_margin + 1100", w: "half", h: 60, font: "small", color: "light",  align: "center", hide: 0},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
 };
 
 let minimalCalendar = {
@@ -92,7 +128,9 @@ let minimalCalendar = {
   sunrise: {source: "weather", key: "sunrise", prefix: "SFSymbol|sunrise.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   personalText: {source: "text", key: "M Y  D A Y", prefix: "SFSymbol|calendar", suffix: "", x: "center + 30", y: "center - 100", w: "full", h: 60, font: "large", color: "light",  align: "center", hide: 0},
-  personalEvents: {source: "calendar", key: "personalEvents", prefix: "", suffix: "", x: "center", y: "center", w: "half", h: 50, font: "extraSmall", color: "light",  align: "center", hide: 0},
+  personalEvents: {source: "calendar", key: "personalEvents", prefix: "", suffix: "", x: "center", y: "center", w: "half", h: 50, font: "small", color: "light",  align: "center", hide: 0},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
 };
 
 let maximalWeather = {
@@ -111,6 +149,8 @@ let maximalWeather = {
   sunrise: {source: "weather", key: "sunrise", prefix: "SFSymbol|sunrise.fill", suffix: "", x: "left_margin", y: "center + 375", w: "half - 50", h: 50, font: "medium", color: "light",  align: "right", hide: 0},
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: "right_margin", y: "center + 375", w: "half - 50", h: 50, font: "medium", color: "light",  align: "left", hide: 0},
   description: {source: "weather", key: "desc", prefix: null, suffix: " today.", x: "right_margin", y: "center + 450", w: "full", h: 50, font: "small", color: "light", align: "center", hide: 0},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
 };
 
 // source: Source of the data. Valid values are "weather", "calendar", "quote", "function" and "text".
@@ -127,6 +167,7 @@ let maximalWeather = {
 // color: Color for the data element (except icon). Valid values are "light", "dark" or hex code of the color. If null, white will be used.
 // align: Alignment of the data element within the data rectangle. Valid values are "left", "right" or "center".
 // hide: 0 or null to show this data element, 1 to hide, 2 for sunrise/sunset only (to show only 1 of them based on the time of the day).
+// bold: true or false
 // field: [source,key,prefix,suffix,x,y,width,height,font,color,align,hide]
 let custom = {
   weatherID: {source: "weather", key: "weatherID", prefix: "SFSymbol|weatherID", suffix: null, x: -90, y: 130, w: 100, h: 120, font: "large", color: "light", align: "center"},
@@ -167,9 +208,9 @@ const DARK_COLOR = "#000000";
 const LEFT_MARGIN = 15;
 const RIGHT_MARGIN = 15;
 const DEFAULT_WIDTH = 100;
-const HEADER_RSIZE = "+1";
-const DETAIL_RSIZE = "1";
-const FOOTER_RSIZE = "-1";
+const HEADER_RSIZE = +1;
+const DETAIL_RSIZE = 1;
+const FOOTER_RSIZE = -1;
 
 // Define fonts and sizes
 const SYSTEM_FONT_NAME = "SF-Pro-Text";   /* These variables are used to calculate the width of text */
@@ -187,16 +228,16 @@ const VERY_BIG_TEXT_SIZE = 140;
 const DEFAULT_TEXT_SIZE = 40;
 
 const allfonts = {
-  ultraSmall: {size: ULTRA_SMALL_TEXT_SIZE, font: Font.systemFont(ULTRA_SMALL_TEXT_SIZE)},
-  extraSmall: {size: EXTRA_SMALL_TEXT_SIZE, font: Font.systemFont(EXTRA_SMALL_TEXT_SIZE)}, 
-  small: {size: SMALL_TEXT_SIZE, font: Font.systemFont(SMALL_TEXT_SIZE)}, 
-  medium: {size: MEDIUM_TEXT_SIZE, font: Font.systemFont(MEDIUM_TEXT_SIZE)}, 
-  large: {size: LARGE_TEXT_SIZE, font: Font.systemFont(LARGE_TEXT_SIZE)}, 
-  veryLarge: {size: VERY_LARGE_TEXT_SIZE, font: Font.systemFont(VERY_LARGE_TEXT_SIZE)},
-  extraLarge: {size: EXTRA_LARGE_TEXT_SIZE, font: Font.systemFont(EXTRA_LARGE_TEXT_SIZE)},
-  big: {size: BIG_TEXT_SIZE, font: Font.systemFont(BIG_TEXT_SIZE)},
-  veryBig: {size: VERY_BIG_TEXT_SIZE, font: Font.systemFont(VERY_BIG_TEXT_SIZE)},
-  default: {size: DEFAULT_TEXT_SIZE, font: Font.systemFont(DEFAULT_TEXT_SIZE)}
+  ultraSmall: {size: ULTRA_SMALL_TEXT_SIZE, font: Font.systemFont(ULTRA_SMALL_TEXT_SIZE), boldFont: Font.boldSystemFont(ULTRA_SMALL_TEXT_SIZE), up: "extraSmall", down: "ultraSmall"},
+  extraSmall: {size: EXTRA_SMALL_TEXT_SIZE, font: Font.systemFont(EXTRA_SMALL_TEXT_SIZE), boldFont: Font.boldSystemFont(EXTRA_SMALL_TEXT_SIZE), up: "small", down: "ultraSmall"}, 
+  small: {size: SMALL_TEXT_SIZE, font: Font.systemFont(SMALL_TEXT_SIZE), boldFont: Font.boldSystemFont(SMALL_TEXT_SIZE), up: "medium", down: "extraSmall"},
+  medium: {size: MEDIUM_TEXT_SIZE, font: Font.systemFont(MEDIUM_TEXT_SIZE), boldFont: Font.boldSystemFont(MEDIUM_TEXT_SIZE), up: "large", down: "small"}, 
+  large: {size: LARGE_TEXT_SIZE, font: Font.systemFont(LARGE_TEXT_SIZE), boldFont: Font.boldSystemFont(LARGE_TEXT_SIZE), up: "veryLarge", down: "medium"}, 
+  veryLarge: {size: VERY_LARGE_TEXT_SIZE, font: Font.systemFont(VERY_LARGE_TEXT_SIZE), boldFont: Font.boldSystemFont(VERY_LARGE_TEXT_SIZE), up: "extraLarge", down: "large"},
+  extraLarge: {size: EXTRA_LARGE_TEXT_SIZE, font: Font.systemFont(EXTRA_LARGE_TEXT_SIZE), boldFont: Font.boldSystemFont(EXTRA_LARGE_TEXT_SIZE), up: "big", down: "veryLarge"},
+  big: {size: BIG_TEXT_SIZE, font: Font.systemFont(BIG_TEXT_SIZE), boldFont: Font.boldSystemFont(BIG_TEXT_SIZE), up: "veryBig", down: "extraLarge"},
+  veryBig: {size: VERY_BIG_TEXT_SIZE, font: Font.systemFont(VERY_BIG_TEXT_SIZE), boldFont: Font.boldSystemFont(VERY_BIG_TEXT_SIZE), up: "veryBig", down: "big"},
+  default: {size: DEFAULT_TEXT_SIZE, font: Font.systemFont(DEFAULT_TEXT_SIZE), boldFont: Font.boldSystemFont(DEFAULT_TEXT_SIZE), up: "default", down: "default"}
 }
 
 // URLs to fetch weather data and icons and quotes
@@ -229,12 +270,13 @@ const defaultWeatherDataForTesting = {
 const unknownWeatherData = {
   loc: 'UNKNOWN',
   weatherID: '999',
+  mainDesc: '?',
   desc: 'No weather data for you',
   feelsLike: '?',
   dewPoint: '?',
   visibility: '?',
   pressure: '?',
-  uvi: '6',
+  uvi: '?',
   humidity: '?',
   temp: '?',
   wind: '?',
@@ -249,7 +291,7 @@ const unknownWeatherData = {
 const unknownQuotesData = {
   quote: "Whether you think you can or think you can't, you're right.",
   author: "Henry Ford",
-  quoteWithAuthor: [["1", "Whether you think you can or think you can't, you're right."],["-1", "[Henry Ford]"]]
+  quoteWithAuthor: [["1", "Whether you think you can or think you can't, you're right."],[FOOTER_RSIZE, "[Henry Ford]"]]
 }
 
 const unknownCalendarData = {
@@ -276,6 +318,7 @@ const DEVICE_SCALE = Device.screenScale();
 
 /* Start script */
 
+const updateRequired = await checkUpdates();
 const calendarData = await fetchCalendar();
 const weatherData = await fetchWeather();
 const quotesData = await fetchQuotes();
@@ -321,6 +364,7 @@ function encodeOverlayImage(overlayImage){
     writeLOG(errMsg);
     return;
   }
+  writeLOG("Encoded Overlay to base64 string successfully");
   return overlayBase64String;
 }
 /*------------------------------------------------------------------
@@ -403,10 +447,10 @@ FUNCTION createOverlay
 ------------------------------------------------------------------*/
 async function createOverlay(weatherData, calendarData, quotesData) {
   try {
+
     let imgCanvas=new DrawContext();
     imgCanvas.opaque = false;
     imgCanvas.size = DEVICE_RESOLUTION;
-    const mainRect = new Rect(0,0,DEVICE_RESOLUTION.width,DEVICE_RESOLUTION.height);
     
     // Place elements on wallpaper
     let x, y, w, h, rect, font, color, iconImage;
@@ -473,30 +517,60 @@ async function createOverlay(weatherData, calendarData, quotesData) {
         if (repeat) { // If the element is an Array (for personal & work events)
           y = y - h;
           for (const e of element){
-            // If inner element is also array, we are expecting 2 values - relative font size and data
-            // Size is relative to original size i.e +1, 1 or -1
-            if (Array.isArray(e)) {
-              relativeSize = e[0];
-              e0 = e[1];
-              let delta = 0;
+            // If inner element is a dictionary object
+            // Data is rsize, title, color, bold
+            if (e.constructor == Object) {
+              // Relative size
+              relativeSize = e.rsize;
+              // Data 
+              e0 = e.title;
+              // Override color for data, if any
+              if (typeof e.color !== 'undefined') overrideColor = e.color;
+              else overrideColor = color;
+              // Is the text bold?
+              if (e.bold) bold = true;
+              else bold = false;
+              // Prefix color (only applicable to SFSymbol prefixes)
+              if (typeof e.prefixColor !== 'undefined' && e.prefixColor !== null) prefixColor = e.prefixColor;
+              else prefixColor = color;
+              // Compute width of data to increase the height of data element 
+              const fontSizeInPx = Math.ceil(fontSize / DEVICE_SCALE) + "px";
+              const dW = (await getTextWidth(e0, SYSTEM_FONT_WEIGHT + " " + fontSizeInPx + " " + SYSTEM_FONT_NAME)) * DEVICE_SCALE;
+              let dH = h;
+              
+              // Get relative font 
+              newFont = getRelativeFont(fontName,relativeSize,bold);
+              // Adjust delta based on relative size
               if (relativeSize == FOOTER_RSIZE) delta = -10;
               else delta = 0;
-              newFont = getRelativeFont(fontName,relativeSize);
               imgCanvas.setFont(newFont);
+              // Evaluate prefix - if present, SFSymbol or plain text
+              if (typeof e.prefix !== 'undefined' && e.prefix !== null) {
+                overridePrefix = e.prefix;
+                if (e.prefix.split("|")[0] == "SFSymbol") {
+                  const symbol = SFSymbol.named(e.prefix.split("|")[1]);
+                  symbol.applyFont(newFont);
+                  overridePrefix = symbol.image;
+                } else overridePrefix = e.prefix;
+              } else {
+                overridePrefix = null;
+                if (dW > w) dH = h * 2; // Currently only supporting 2 lines wrapping
+              }
+              imgCanvas.setTextColor(new Color(overrideColor));
               y = y + h + delta;
-              rect = new Rect (x,y,w,h);              
+              rect = new Rect (x,y,w,dH);
+              if (dH != h) y = y + (dH - h); // Increase y co-ordinate based on the delta height
             } else {
               e0 = e;
               y = y + h;
               imgCanvas.setFont(font);
               rect = new Rect (x,y,w,h);            
             }
-            
-            imgCanvas = await placeDataElement(imgCanvas, rect, e0, suffix, prefix, item);
+            imgCanvas = await placeDataElement(imgCanvas, rect, e0, suffix, overridePrefix, prefixColor, align, fontName, color, x,y,w,h, bold);
           }
         } // Normal text element
         else {
-          imgCanvas = await placeDataElement(imgCanvas, rect, element, suffix, prefix, item);
+          imgCanvas = await placeDataElement(imgCanvas, rect, element, suffix, prefix, color, align, fontName, color, x,y,w,h, false);
         }
       }
     }
@@ -506,75 +580,25 @@ async function createOverlay(weatherData, calendarData, quotesData) {
     writeLOG(errMsg);
     return;
   }
+  writeLOG("Overlay created successfully");
   return newImage;
 }
 /*------------------------------------------------------------------
 FUNCTION getRelativeFont
 ------------------------------------------------------------------*/
-function getRelativeFont(fontName, relativeSize){
-  newFont = eval(`allfonts.${fontName}.font`);   // This is the default
-  switch (fontName){
-    case "ultraSmall": 
-      if (relativeSize == "+1") newFont = allfonts.extraSmall.font;
-      else newFont = allfonts.ultraSmall.font;
-      break;
-    case "extraSmall":
-      if (relativeSize == "+1") newFont = allfonts.small.font;
-      else if (relativeSize == "-1") newFont = allfonts.ultraSmall.font;
-      else newFont = allfonts.extraSmall.font;
-      break;
-    case "small":
-      if (relativeSize == "+1") newFont = allfonts.medium.font;
-      else if (relativeSize == "-1") newFont = allfonts.extraSmall.font;
-      else newFont = allfonts.small.font;
-      break;
-    case "medium":
-      if (relativeSize == "+1") newFont = allfonts.large.font;
-      else if (relativeSize == "-1") newFont = allfonts.small.font;
-      else newFont = allfonts.medium.font;
-      break;
-    case "large":
-      if (relativeSize == "+1") newFont = allfonts.veryLarge.font;
-      else if (relativeSize == "-1") newFont = allfonts.medium.font;
-      else newFont = allfonts.large.font;
-      break;
-    case "veryLarge":
-      if (relativeSize == "+1") newFont = allfonts.extraLarge.font;
-      else if (relativeSize == "-1") newFont = allfonts.large.font;
-      else newFont = allfonts.veryLarge.font;
-      break;
-    case "extraLarge":
-      if (relativeSize == "+1") newFont = allfonts.big.font;
-      else if (relativeSize == "-1") newFont = allfonts.veryLarge.font;
-      else newFont = allfonts.extraLarge.font;
-      break;
-    case "big":
-      if (relativeSize == "+1") newFont = allfonts.veryBig.font;
-      else if (relativeSize == "-1") newFont = allfonts.extraLarge.font;
-      else newFont = allfonts.big.font;
-      break;
-    case "veryBig":
-      if (relativeSize == "+1") newFont = allfonts.veryBig.font;
-      else if (relativeSize == "-1") newFont = allfonts.big.font;
-      else newFont = allfonts.veryBig.font;
-      break;
-    case "default":
-      if (relativeSize == "+1") newFont = allfonts.large.font;
-      else if (relativeSize == "-1") newFont = allfonts.small.font;
-      else newFont = allfonts.default.font;
-      break;
-  }
-  return newFont;
+function getRelativeFont(fontName, relativeSize, bold){
+  newFont = fontName.split(".")[0];
+  isBold = false;
+  if (bold || fontName.split(".")[1] == "bold") isBold = true;
+  if (relativeSize == HEADER_RSIZE) newFont = eval(`allfonts.${fontName}.up`);
+  else if (relativeSize == FOOTER_RSIZE) newFont = eval(`allfonts.${fontName}.down`);
+  if (!isBold) return eval(`allfonts.${newFont}.font`);
+  else return eval(`allfonts.${newFont}.boldFont`);
 }
 /*------------------------------------------------------------------
 FUNCTION placeDataElement
 ------------------------------------------------------------------*/
-async function placeDataElement(imgCanvas, rect, e, suffix, prefix, item){
-  const x = layout[item].x;
-  const y = layout[item].y;
-  const w = layout[item].w;
-  const h = layout[item].h;
-  const align = layout[item].align;
+async function placeDataElement(imgCanvas, rect, e, suffix, prefix, prefixColor, align, fontName, overrideColor, x,y,w,h, bold){
   let element0 = e.slice(0, 1).toUpperCase() + e.slice(1, e.length)  // Capitalize first letter of the data  
   if ( suffix !== null) { 
     element0 = element0 + suffix
@@ -582,11 +606,12 @@ async function placeDataElement(imgCanvas, rect, e, suffix, prefix, item){
   // Prefix can be a text value or SFSymbol
   if (prefix !== null) {
     if (typeof prefix == 'object') {  // if prefix is an image i.e. SFSymbol
-        const prefix0 = await prefixImage(prefix, element0, item);
+        const prefix0 = await prefixImage(prefix, element0, fontName, prefixColor, overrideColor, w, h, bold);
         let newX;
         const newY = y;
         const newH = h;
-        const newW = prefix0.size.width;
+        let newW = prefix0.size.width;
+        if (newW > w) newW = w;
         if (align == 'right'){
           newX = x + w - newW;
         } else if (align == 'left') {
@@ -607,21 +632,19 @@ async function placeDataElement(imgCanvas, rect, e, suffix, prefix, item){
 /*------------------------------------------------------------------
 FUNCTION prefixImage
 ------------------------------------------------------------------*/
-async function prefixImage(prefixImage, text, item){
+async function prefixImage(prefixImage, text, fontName, prefixColor, overrideColor, oW, oH, bold){
   let prefixCanvas;
   let gap;
   try {
-    const oW = layout[item].w;  // original width
-    const oH = layout[item].h;  // original height
-    const font = layout[item].font;
-    const fontSize = layout[item].fontSize;
-    const fontSizeInPx = Math.ceil(layout[item].fontSize / DEVICE_SCALE + 1) + "px";
-    const color = layout[item].color;
+    if (bold) font = eval(`allfonts.${fontName}.boldFont`);
+    else font = eval(`allfonts.${fontName}.font`);
+    const fontSize = eval(`allfonts.${fontName}.size`);
+    const fontSizeInPx = Math.ceil(fontSize / DEVICE_SCALE) + "px";
     const pW = prefixImage.size.width; // prefix width
     const pH = prefixImage.size.height; // prefix height
     const dW = (await getTextWidth(text, SYSTEM_FONT_WEIGHT + " " + fontSizeInPx + " " + SYSTEM_FONT_NAME)) * DEVICE_SCALE;
 
-    if (fontSize <= 40) gap = 4;
+    if (fontSize <= 30) gap = 4;
     else if (fontSize <= 100) gap = 10;
     else if (fontSize > 100) gap = 20;
 
@@ -629,12 +652,12 @@ async function prefixImage(prefixImage, text, item){
     prefixCanvas=new DrawContext();
     prefixCanvas.opaque = false;
     prefixCanvas.size = new Size(pW + dW + gap,oH);
-
+    prefixImage = await tintSFSymbol(prefixImage, new Color(prefixColor));
     // Draw prefixImage at (x,y) = (0,0)
     prefixCanvas.drawImageAtPoint(prefixImage, new Point(0,0));
     
     const dataRect = new Rect(pW + gap,0,dW,oH);
-    prefixCanvas.setTextColor(new Color(color));
+    prefixCanvas.setTextColor(new Color(overrideColor));
     prefixCanvas.setFont(font);
     prefixCanvas.setTextAlignedLeft();
     prefixCanvas.drawTextInRect(text, dataRect);
@@ -699,10 +722,18 @@ async function updateLayout(isNight, weatherID){
         layout[item].font = allfonts.default.font;
         layout[item].size = allfonts.default.size;
         layout[item].fontName = "default";
+        layout[item].bold = false;
       }
       else {
-        const fontName = layout[item].font;
-        layout[item].font = eval(`${`allfonts.${fontName}.font`}`);
+        const fontName = (layout[item].font).split(".")[0];
+        const boldType = (layout[item].font).split(".")[1];
+        if (boldType == 'bold'){
+          layout[item].font = eval(`${`allfonts.${fontName}.boldFont`}`);
+          layout[item].bold = true;
+        } else {
+          layout[item].font = eval(`${`allfonts.${fontName}.font`}`);
+          layout[item].bold = false;
+        }
         layout[item].fontSize = eval(`${`allfonts.${fontName}.size`}`); // insert new field in the layout, fontSize
         layout[item].fontName = fontName;
       }
@@ -719,11 +750,15 @@ async function updateLayout(isNight, weatherID){
               layout[item].source = "text";
               layout[item].key = "";
             }
+          } else if (symbolName == 'dayOfMonth') {
+            const day = (new Date()).getDate().toString().padStart(2,'0');
+            symbolName = `${day}.circle.fill`;
           }
+          console.log("Symbols is " + symbolName);
           const symbol = SFSymbol.named(symbolName);
+          console.log("Symbol image is " + symbol);
           symbol.applyFont(layout[item].font);
-          // Tint using a custom function - Thanks to user [schl3ck] https://talk.automators.fm/u/schl3ck
-          layout[item].prefix = await tintSFSymbol(symbol.image, new Color(layout[item].color));
+          layout[item].prefix = symbol.image;
         }
         // Everything else remains untouched
       }
@@ -739,6 +774,8 @@ async function updateLayout(isNight, weatherID){
           else layout[item].hide = 1;
         }
       }
+
+      if (layout[item].source == "update" && !updateRequired) layout[item].hide = 1;
     }
   } catch (error) {
     errMsg = "updateLayout_" + error.message.replace(/\s/g,"_");
@@ -862,7 +899,7 @@ async function fetchQuotes(){
     new RegExp(`(?![^\\n]{1,${w}}$)([^\\n]{1,${w}})\\s`, 'g'), ' $1| '
   );
   quoteWithAuthor = wrapText(response.content,QUOTE_WRAP_LENGTH).split('|');
-  quoteWithAuthor.push([DETAIL_RSIZE, "[" + response.author + "]"]);
+  quoteWithAuthor.push({rsize: DETAIL_RSIZE, title: "[" + response.author + "]"});
   return {
     quote: response.content,
     author: response.author,
@@ -887,14 +924,22 @@ async function fetchCalendar() {
   let wEventsTodayAllDayCount = 0;
   let wEventsTomorrowCount = 0;
   let wEventsTomorrowAllDayCount = 0;
+  let calendarColors = {};
+  const maxColors = CALENDAR_COLORS.length;
+  let colorIdx = 0;
 
   // Fetch all personal calendar events for today and tomorrow
   for (const calendarName of CALENDAR_PERSONAL_CALENDARS) {
     const calendar = await Calendar.forEventsByTitle(calendarName);
     const todayEvents = await CalendarEvent.today([calendar]);
+    const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
+    if (todayEvents.length > 0 || tomorrowEvents.length > 0){
+      calendarColors[calendarName] = CALENDAR_COLORS[colorIdx];
+      colorIdx++;
+      if (colorIdx >= maxColors) colorIdx = 0; // Repeat colors after max
+    }
     for (const e of todayEvents) pEventsToday.push(e);
     if (CALENDAR_SHOW_TOMORROW_EVENTS){
-      const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
       for (const e of tomorrowEvents) pEventsTomorrow.push(e);
     }
   }
@@ -903,9 +948,14 @@ async function fetchCalendar() {
   if (CALENDAR_PERSONAL_CALENDARS.length == 0){
     const calendar = await Calendar.defaultForEvents();
     const todayEvents = await CalendarEvent.today([calendar]);
+    const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
+    if (todayEvents.length > 0 || tomorrowEvents.length > 0){
+      calendarColors[calendarName] = CALENDAR_COLORS[colorIdx];
+      colorIdx++;
+      if (colorIdx >= maxColors) colorIdx = 0; // Repeat colors after max
+    }
     for (const e of todayEvents) pEventsToday.push(e);
     if (CALENDAR_SHOW_TOMORROW_EVENTS){
-      const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
       for (const e of tomorrowEvents) pEventsTomorrow.push(e);
     }
   }
@@ -915,9 +965,14 @@ async function fetchCalendar() {
     for (const calendarName of CALENDAR_WORK_CALENDARS) {
       const calendar = await Calendar.forEventsByTitle(calendarName);
       const todayEvents = await CalendarEvent.today([calendar]);
+      const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
+      if (todayEvents.length > 0 || tomorrowEvents.length > 0){
+        calendarColors[calendarName] = CALENDAR_COLORS[colorIdx];
+        colorIdx++;
+        if (colorIdx >= maxColors) colorIdx = 0; // Repeat colors after max
+      }
       for (const e of todayEvents) wEventsToday.push(e);
       if (CALENDAR_SHOW_TOMORROW_EVENTS) {
-        const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
         for (const e of tomorrowEvents) wEventsTomorrow.push(e);
       }
     }
@@ -953,8 +1008,11 @@ async function fetchCalendar() {
   wEventsTomorrowCount = wEventsTomorrow.length - wEventsTomorrowAllDayCount;
 
   // Format output array as required
-  personalEvents = formatEvents(pEventsToday, pEventsTomorrow, CALENDAR_PERSONAL_MAX_EVENTS,false);
-  workEvents = formatEvents(wEventsToday, wEventsTomorrow, CALENDAR_WORK_MAX_EVENTS,true);
+  personalEvents = formatEvents(pEventsToday, pEventsTomorrow, CALENDAR_PERSONAL_MAX_EVENTS,calendarColors,false);
+  workEvents = formatEvents(wEventsToday, wEventsTomorrow, CALENDAR_WORK_MAX_EVENTS,calendarColors,true);
+
+  // personEventsRaw = pEventsToday.concat(pEventsTomorrow);
+  // workEventsRaw = wEventsToday.concat(wEventsTomorrow);
   return {
     personalEvents: personalEvents, 
     workEvents: workEvents, 
@@ -981,7 +1039,7 @@ function sortEvents(e1,e2) {
 /*------------------------------------------------------------------
 FUNCTION formatEvents
 ------------------------------------------------------------------*/
-function formatEvents(eventsToday, eventsTomorrow, maxEvents, isWork){
+function formatEvents(eventsToday, eventsTomorrow, maxEvents, calendarColors, isWork){
   let formatLine = [];
   let eventsToShow = 0;
   const today = new Date();
@@ -991,57 +1049,75 @@ function formatEvents(eventsToday, eventsTomorrow, maxEvents, isWork){
   const tomorrowText = "T O M O R R O W";
 
   if (isWork && CALENDAR_WORK_CALENDARS.length == 0) {
-    formatLine.push([DETAIL_RSIZE, CALENDAR_NOT_SET_TEXT]);
+    formatLine.push({rsize: DETAIL_RSIZE, title: CALENDAR_NOT_SET_TEXT});
     return formatLine;
   }
 
-  formatLine.push([HEADER_RSIZE, todayText]);
+  formatLine.push({rsize: HEADER_RSIZE, title: todayText});
   eventsToShow = 0;
   for (const e of eventsToday) {
     if (eventsToShow < maxEvents) {
-      let prefix="";
+      let prefix = null;
+      let prefixColor = null;
+      let bold = false;
       // Mark ongoing events
-      if ((new Date(e.endDate)).getTime() >= today.getTime() && (new Date(e.startDate)).getTime() <= today.getTime() && !e.isAllDay) prefix = " 🔴 ";
-      formatLine.push([DETAIL_RSIZE,prefix + e.title]);
-      if (e.isAllDay) formatLine.push([FOOTER_RSIZE,"[ALL DAY]"]);
+      if ((new Date(e.endDate)).getTime() >= today.getTime() && (new Date(e.startDate)).getTime() <= today.getTime() && !e.isAllDay) {
+        prefix = "SFSymbol|circlebadge.fill";
+        prefixColor = red0;
+        bold = false;
+      } else {
+        if (e.isAllDay) prefix = "SFSymbol|app";
+        else prefix = "SFSymbol|app.fill";
+        prefixColor = calendarColors[e.calendar.title];
+      }
+      // Array of [Relative size, event title, calendar color]
+      if (CALENDAR_SHOW_COLORS) formatLine.push({rsize: DETAIL_RSIZE, title: e.title, prefix: prefix, prefixColor: prefixColor, bold: bold});
+      else formatLine.push({rsize: DETAIL_RSIZE, title: e.title});
+      if (e.isAllDay) formatLine.push({rsize: FOOTER_RSIZE,title: "[ALL DAY]", bold: true});
       else {
         if (!isSameDay(e.startDate,e.endDate)){
           if (isSameDay(e.startDate,today)) // Starts today but ends on a later date, show only start time
-            formatLine.push([FOOTER_RSIZE,`[${formatTime(e.startDate)}]`]);
-          else formatLine.push([FOOTER_RSIZE,`[Ends ${formatTime(e.endDate)}]`])   // Starts earlier but ends today
+            formatLine.push({rsize: FOOTER_RSIZE, title: `[${formatTime(e.startDate)}]`, bold: true});
+          else formatLine.push({rsize: FOOTER_RSIZE, title: `[Ends ${formatTime(e.endDate)}]`, bold: true})   // Starts earlier but ends today
         } else {
-          formatLine.push([FOOTER_RSIZE,`[${formatTime(e.startDate)} - ${formatTime(e.endDate)}]`]);
+          formatLine.push({rsize: FOOTER_RSIZE, title: `[${formatTime(e.startDate)} - ${formatTime(e.endDate)}]`, bold: true});
         }
       }
       eventsToShow++;
     }
   }
-  if (eventsToShow == 0 && maxEvents > 0) formatLine.push([DETAIL_RSIZE, CALENDAR_NO_EVENTS_TEXT]);
-  if (eventsToShow < eventsToday.length) formatLine.push([FOOTER_RSIZE, `${eventsToday.length - eventsToShow} more event(s)`]);
+  if (eventsToShow == 0 && maxEvents > 0) formatLine.push({rsize: FOOTER_RSIZE, title: CALENDAR_NO_EVENTS_TEXT});
+  if (eventsToShow < eventsToday.length) formatLine.push({rsize: FOOTER_RSIZE, title: `${eventsToday.length - eventsToShow} more event(s)`});
 
   if (!CALENDAR_SHOW_TOMORROW_EVENTS) return formatLine;
 
-  formatLine.push([HEADER_RSIZE, tomorrowText]);
+  formatLine.push({rsize: HEADER_RSIZE, title: tomorrowText});
   eventsToShow = 0;
   for (const e of eventsTomorrow) {
     if (eventsToShow < maxEvents) {
-      formatLine.push([DETAIL_RSIZE,e.title]);
-      if (e.isAllDay) formatLine.push([FOOTER_RSIZE,"[ALL DAY]"]);
+      // Color calendars    
+      if (e.isAllDay) prefix = "SFSymbol|app";
+      else prefix = "SFSymbol|app.fill";
+      prefixColor = calendarColors[e.calendar.title];
+      // Array of [Relative size, event title, calendar color]
+      if (CALENDAR_SHOW_COLORS) formatLine.push({rsize: DETAIL_RSIZE,title: e.title, prefix: prefix, prefixColor: prefixColor});
+      else formatLine.push({rsize: DETAIL_RSIZE,title: e.title});
+      if (e.isAllDay) formatLine.push({rsize: FOOTER_RSIZE,title: "[ALL DAY]", bold: true});
       else {
         if (!isSameDay(e.startDate,e.endDate)){
           if (isSameDay(e.startDate,tomorrow)) // Starts tomorrow but ends on a later date, show only start time
-            formatLine.push([FOOTER_RSIZE,`[${formatTime(e.startDate)}]`]);
-          else formatLine.push([FOOTER_RSIZE,`[Ends ${formatTime(e.endDate)}]`]);   // Starts earlier but ends tomorrow
+            formatLine.push({rsize: FOOTER_RSIZE, title: `[${formatTime(e.startDate)}]`, bold: true});
+          else formatLine.push({rsize: FOOTER_RSIZE, title: `[Ends ${formatTime(e.endDate)}]`, bold: true});   // Starts earlier but ends tomorrow
         } else {
-          formatLine.push([FOOTER_RSIZE,`[${formatTime(e.startDate)} - ${formatTime(e.endDate)}]`]);
+          formatLine.push({rsize: FOOTER_RSIZE, title: `[${formatTime(e.startDate)} - ${formatTime(e.endDate)}]`, bold: true});
         }
       }
       eventsToShow++;
     }
   }
 
-  if (eventsToShow == 0 && maxEvents > 0) formatLine.push([DETAIL_RSIZE, CALENDAR_NO_EVENTS_TEXT]);
-  if (eventsToShow < eventsTomorrow.length) formatLine.push([FOOTER_RSIZE, `${eventsTomorrow.length - eventsToShow} more event(s)`]);
+  if (eventsToShow == 0 && maxEvents > 0) formatLine.push({rsize: FOOTER_RSIZE, title: CALENDAR_NO_EVENTS_TEXT});
+  if (eventsToShow < eventsTomorrow.length) formatLine.push({rsize: FOOTER_RSIZE, title: `${eventsTomorrow.length - eventsToShow} more event(s)`});
 
   return formatLine;
 }
@@ -1206,4 +1282,48 @@ function calendarText(calendarData) {
   );
   const text0 = wrapText(text,50);
   return text0;
+}
+/*------------------------------------------------------------------
+FUNCTION checkUpdates
+------------------------------------------------------------------*/
+async function checkUpdates(){
+  // Version info
+  const VERSION = "2.1"; // DO NOT CHANGE THIS VALUE
+  // version data is stored in the format {version: version, releaseDate: releaseDate, changeLog: changeLog}
+  if (UPDATE_CHECK_DAYS == 0) return false;
+  versionURL = 'https://raw.githubusercontent.com/ajatkj/scriptable/master/lib/LSWeatherVersionInfo.json';
+  let updateRequired = false;
+  let t = new Date() 
+  let today = t.getDate().toString().padStart(2,'0') + "/" + (t.getMonth() + 1).toString().padStart(2,'0') + "/" + t.getFullYear();
+  let fm = FileManager.iCloud();
+  let versionPath = fm.joinPath(fm.documentsDirectory(), "LSWeather");
+  if (!fm.fileExists(versionPath)) fm.createDirectory(versionPath);
+  let versionFile = fm.joinPath(versionPath,'versioncheck.txt');
+  if (fm.fileExists(versionFile)) {
+    vers = JSON.parse(fm.readString(versionFile));
+    oldVersion = vers.version;
+    lastChecked = vers.lastChecked;
+  } else {
+    oldVersion = 0;
+    lastChecked = 0;
+  }
+  writeLOG("Last checked date is " + lastChecked + " with version " + oldVersion);
+  if (oldVersion != VERSION) updateRequired = true;
+  // Find when was last check done
+  let daysDiff = ((new Date(today)) - (new Date(lastChecked))) / (1000 * 3600 * 24);
+  if (daysDiff >= UPDATE_CHECK_DAYS || lastChecked == 0) {
+    //Check for updates
+    let updateCheck = new Request(versionURL);
+    writeLOG(`Going to check current version at ${versionURL}`)
+    uC = await updateCheck.loadJSON()
+    if (uC.version != VERSION){
+      writeLOG("Found version: " + uC.version);
+      lastChecked = today;
+      fm.writeString(versionFile, JSON.stringify({"version": uC.version, "lastChecked": lastChecked}));
+      updateRequired = true;
+    } else if (lastChecked == 0) {
+      fm.writeString(versionFile, JSON.stringify({"version": VERSION, "lastChecked": today}));
+    }
+  }
+  return updateRequired;
 }

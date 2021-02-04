@@ -5,7 +5,7 @@ The script generates an overlay image which is embedded on top of a wallpaper.
 
 ![](images/LSWeather.png) ![](images/LSWeather_welcome.png)
 ![](images/LSWeather_showMyWork.png) ![](images/LSWeather_feelMotivated.png)
-![](images/LSWeather_minimalCalendar.png) ![](images/LSWeather_maximalCalendar.png)
+![](images/LSWeather_minimalCalendar.png) ![](images/LSWeather_maximalWeather.png)
 
 ## Features
 1. Shows weather, calendar and random quote on the lock screen.
@@ -21,6 +21,7 @@ The script generates an overlay image which is embedded on top of a wallpaper.
    - Learn more about SFSymbols [here](https://developer.apple.com/sf-symbols/).
    - Check full list by downloading the macOS app from the above site or visit [sfsymbols.com](https://sfsymbols.com).
 1. Run in *test* mode without calling various APIs
+1. Compatible with almost all devices running iOS 14.4+. The Shortcut can handle any resolution wallpaper.
 
 ## Installation
 1. Download and extract the content of this repository.
@@ -32,17 +33,25 @@ iCloud Drive/
 ```
 1. Launch Scriptable and make sure that `LSWeather` is listed in the Scripts view.
 1. Run the script to check if its working properly. A quicklook window with the default layout overlay will open.
-1. Create an Album in Photos with name **WeatherLS**.
-1. Add *some* wallpapers to this Album.
+1. Configure wallpapers. You can use either Photos Album or iCloud Folder to use as source of wallpapers
+   - Photos Album
+     - Create an Album in Photos with name **LSWeather**.
+     - Add *some* wallpapers to this Album.
+     - Shortcut will automatically pick up a wallpaper at random from this album.
+   - iCloud Folder
+     - Create a folder in iCloud -> Shortcuts with the name **LSWeather**.
+     - Add *some* wallpapers to this folder.
+     - Shortcut will automatically pick up a wallpaper at random from this folder.
 1. Download and install this [shortcut](https://www.icloud.com/shortcuts/1e99eca2edb0418fb1ad6ee9ccf1312d).
 1. Configure the shortcut as mentioned below.
 1. Run the shortcut.
 
 ## Shortcut Configuration
 1. Open the shortcut in Shortcuts app. 
-1. Set the dictionary key value `layout` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'mimimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
+1. Set the dictionary key value `layout` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'minimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
 1. Set the dictionary key value `apiKey` to your openWeather API key.
    - Note: if `layout` and `apiKey` are not passed from Shortcuts app, it should be defined in the LSWeather script.
+1. You can use either Photos Album or iCloud Folder to pick wallpapers for this script. To change that, look for the dictionary with `Photos` and `iCloud` boolean values and set either of them to `true`. Default is Photos.
 
 ## Script Configuration
 1. OpenWeather API
@@ -51,7 +60,7 @@ iCloud Drive/
    - Note: Value passed from Shortcuts app will over-ride the API key value set in the script.
 
 1. Template
-   - Set `LAYOUT` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'mimimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
+   - Set `LAYOUT` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'minimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
    - Or use your customer layout by setting `LAYOUT = 'custom'`.
    - Note: Value passed from Shortcuts app will over-ride values set in the script.
    
@@ -73,6 +82,8 @@ iCloud Drive/
      - If this variable is empty (`[]`), script will not display anything. In this case also set `hide` value to 1 for the layout item `workText` (See details below).
    - Maximum personal events to show set `CALENDAR_PERSONAL_MAX_EVENTS`.
    - Maximum work events to show set `CALENDAR_WORK_MAX_EVENTS`.
+   - Set-up colors for different calendars with variable `CALENDAR_COLORS`.
+   - To turn on/off calendar colors set `CALENDAR_SHOW_COLORS` to `true` or `false`.
 
 1. Configure Quote Details
    - To show/hide quotes set `QUOTE_SHOW_QUOTES` to `true` or `false`. Hiding quotes details will not call the API.
@@ -82,6 +93,11 @@ iCloud Drive/
      - You can get list of all valid tags [here](https://api.quotable.io/tags).
    - To change maximum length of quotes to be fetched set `QUOTE_MAX_LENGTH`.
    - To change quotes wrap length set `QUOTE_WRAP_LENGTH`. 
+
+1. Configure Update Notification
+   - Whenever an update is available on GitHub, a red update notification will appear on the top right corner. 
+   - You can configure the number of days the script should look for an update by setting `UPDATE_CHECK_DAYS`.
+   - Set above value to 0 to stop looking for updates (not recommended).
 
 1. To test the script without calling the openweather & quotable APIs set `TESTING` to `true`.
 
@@ -101,6 +117,7 @@ iCloud Drive/
    - [x] color: Color for the data element (except icon). Valid values are "light", "dark" or hex code of the color. If null, white will be used.
    - [x] align: Alignment of the data element within the data rectangle. Valid values are "left", "right" or "center".
    - [x] hide: 0 or null to show this data element, 1 to hide, 2 for sunrise/sunset only (to show only 1 of them based on the time of the day).
+   - [x] bold: make text bold. Valid values are true or false.
 
 1. Check script logs in **LSWeatherLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
 
