@@ -37,6 +37,7 @@ const LOG_FILE_PATH = "LSWeatherLogs";
 let LOG_STEP = 1;
 
 const UPDATE_CHECK_DAYS = 7; // Check updates every 7 days, set 0 to stop update check
+const SHOW_LAST_UPDATED_TIME = true;
 
 // ============================================== CONFIGURABLE SECTION (START) ============================================== //
 
@@ -59,9 +60,9 @@ const CALENDAR_SHOW_CALENDARS = true;
 const CALENDAR_SHOW_ALL_DAY_EVENTS = true;
 const CALENDAR_SHOW_TOMORROW_EVENTS = true;
 const CALENDAR_SHOW_COLORS = true;
-const CALENDAR_WORK_CALENDARS = ['Gmail','Tithis','Arsenal FC']; // Leave blank if you don't want to display any work calendar
+let CALENDAR_WORK_CALENDARS = []; // Leave blank if you don't want to display any work calendar
 const CALENDAR_WORK_MAX_EVENTS = 3;
-const CALENDAR_PERSONAL_CALENDARS = ['Weather','Calendar','IN Holidays']; // Leave blank for using defualt iOS Calendar
+let CALENDAR_PERSONAL_CALENDARS = []; // Leave blank for using defualt iOS Calendar
 const CALENDAR_PERSONAL_MAX_EVENTS = 3;
 const CALENDAR_NO_EVENTS_TEXT = 'No Upcoming Events';
 const CALENDAR_NOT_SET_TEXT = 'Calendar Not Set';
@@ -75,7 +76,7 @@ const QUOTE_MAX_LENGTH = 100; // Maximum characters of quote to be fetched, shor
 const QUOTE_WRAP_LENGTH = 50; // Wrap quote at this length. Words are not broked, text is wrapped before word is broken
 
 // Some predefined layouts - 'custom','welcome','minimalWeather','feelMotivated','minimalCalendar','showMyWork' and 'maximalWeather';
-let LAYOUT = 'minimalCalendar';
+let LAYOUT = 'showMyWork';
 
 let welcome = {
   welcomeGreeting: {source: "function", key: "greetingText()", prefix: "", suffix: "", x: "center", y: "center - 150", w: "full", h: 100, font: "veryLarge", color: "light",  align: "center", hide: 0},
@@ -83,7 +84,8 @@ let welcome = {
   welcomeTemp: {source: "weather", key: "temp", prefix: "SFSymbol|weatherID", suffix: "temperature", x: "center", y: "center + 150", w: 300, h: 120, font: "extraLarge", color: "light",  align: "center"},
   welcomeCalendar: {source: "function", key: "calendarText(calendarData)", prefix: null, suffix: null, x: "center", y: "center + 300", w: "full", h: 120, font: "small", color: "light",  align: "center"},
   pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
-  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 1},
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: "[", suffix: "]", x: "left_margin + 25", y: "bottom_margin - 20", w: 200, h: 75, font: "small", color: "light",  align: "center", bold:false, hide: 0},
 };
 
 let minimalWeather = {
@@ -95,12 +97,14 @@ let minimalWeather = {
   sunrise: {source: "weather", key: "sunrise", prefix: "SFSymbol|sunrise.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
-  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 1},
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: "[", suffix: "]", x: "left_margin + 25", y: "bottom_margin - 20", w: 200, h: 75, font: "small", color: "light",  align: "center", bold:false, hide: 0},
 };
 
 let feelMotivated = {
   quotewithAuthor: {source: "quote", key: "quoteWithAuthor", prefix: "", suffix: "", x: "right_margin", y: 2050, w: "full", h: 50, font: "small", color: "light",  align: "center", hide: 0},
-  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2}
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: "[", suffix: "]", x: "left_margin + 25", y: "bottom_margin - 20", w: 200, h: 75, font: "small", color: "light",  align: "center", bold:false, hide: 0},
 };
 
 let showMyWork = {
@@ -116,7 +120,8 @@ let showMyWork = {
   workText: {source: "text", key: "W O R K", prefix: "SFSymbol|desktopcomputer", suffix: "", x: "right_margin", y: "top_margin + 1000", w: "half", h: 60, font: "large", color: "light",  align: "center", hide: 0},
   workEvents: {source: "calendar", key: "workEvents", prefix: null, suffix: "", x: "right_margin", y: "top_margin + 1100", w: "half", h: 60, font: "small", color: "light",  align: "center", hide: 0},
   pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
-  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 1},
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: "[", suffix: "]", x: "left_margin + 25", y: "bottom_margin - 20", w: 200, h: 75, font: "small", color: "light",  align: "center", bold:false, hide: 0},
 };
 
 let minimalCalendar = {
@@ -128,9 +133,10 @@ let minimalCalendar = {
   sunrise: {source: "weather", key: "sunrise", prefix: "SFSymbol|sunrise.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: -100, y: 330, w: 120, h: 50, font: "extraSmall", color: "light",  align: "center", hide: 2},
   personalText: {source: "text", key: "M Y  D A Y", prefix: "SFSymbol|calendar", suffix: "", x: "center + 30", y: "center - 100", w: "full", h: 60, font: "large", color: "light",  align: "center", hide: 0},
-  personalEvents: {source: "calendar", key: "personalEvents", prefix: "", suffix: "", x: "center", y: "center", w: "half", h: 50, font: "small", color: "light",  align: "center", hide: 0},
+  personalEvents: {source: "calendar", key: "personalEvents", prefix: "", suffix: "", x: "center", y: "center", w: "half", h: 60, font: "small", color: "light",  align: "center", hide: 0},
   pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
-  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 1},
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: null, suffix: "", x: "left_margin + 25", y: "bottom_margin - 50", w: 200, h: 75, font: "small", color: "light",  align: "center", hide: 0},
 };
 
 let maximalWeather = {
@@ -150,7 +156,8 @@ let maximalWeather = {
   sunset: {source: "weather", key: "sunset", prefix: "SFSymbol|sunset.fill", suffix: "", x: "right_margin", y: "center + 375", w: "half - 50", h: 50, font: "medium", color: "light",  align: "left", hide: 0},
   description: {source: "weather", key: "desc", prefix: null, suffix: " today.", x: "right_margin", y: "center + 450", w: "full", h: 50, font: "small", color: "light", align: "center", hide: 0},
   pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
-  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 0}
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 1},
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: "[", suffix: "]", x: "left_margin + 25", y: "bottom_margin - 20", w: 200, h: 75, font: "small", color: "light",  align: "center", bold:false, hide: 0},
 };
 
 // source: Source of the data. Valid values are "weather", "calendar", "quote", "function" and "text".
@@ -189,11 +196,14 @@ let custom = {
   workEvents: {source: "calendar", key: "workEvents", prefix: "", suffix: "", x: "right_margin", y: 1020, w: "half", h: 50, font: "extraSmall", color: "light",  align: "center", hide: 0},
   quote: {source: "quote", key: "quote", prefix: "", suffix: "", x: "right_margin", y: 1500, w: "full", h: 50, font: "extraSmall", color: "light",  align: "center", hide: 1},
   author: {source: "quote", key: "author", prefix: "", suffix: "", x: "right_margin", y: 1500, w: "full", h: 50, font: "extraSmall", color: "light",  align: "center", hide: 1},
-  quoteText: {source: "text", key: "Quote of the Day", prefix: "", suffix: "", x: "right_margin", y: 2000, w: "full", h: 50, font: "medium", color: "light",  align: "center", hide: 0},
-  quotewithAuthor: {source: "quote", key: "quoteWithAuthor", prefix: "", suffix: "", x: "right_margin", y: 2050, w: "full", h: 50, font: "small", color: "light",  align: "center", hide: 0},
-  welcomeGreeting: {source: "function", key: "greetingText()", prefix: "", suffix: "", x: "center", y: "center - 150", w: "full", h: 100, font: "veryLarge", color: "light",  align: "center", hide: 0},
-  welcomeClimate: {source: "function", key: "weatherText(weatherData)", prefix: "", suffix: "", x: "center", y: "center", w: "full", h: 100, font: "medium", color: "light",  align: "center", hide: 0},
-  welcomeTemp: {source: "weather", key: "temp", prefix: "SFSymbol|weatherID", suffix: "temperature", x: "center", y: "center + 150", w: 100, h: 120, font: "extraLarge", color: "light",  align: "center"},
+  quoteText: {source: "text", key: "Quote of the Day", prefix: "", suffix: "", x: "right_margin", y: 2000, w: "full", h: 50, font: "medium", color: "light",  align: "center", hide: 1},
+  quotewithAuthor: {source: "quote", key: "quoteWithAuthor", prefix: "", suffix: "", x: "right_margin", y: 2050, w: "full", h: 50, font: "small", color: "light",  align: "center", hide: 1},
+  welcomeGreeting: {source: "function", key: "greetingText()", prefix: "", suffix: "", x: "center", y: "center - 150", w: "full", h: 100, font: "veryLarge", color: "light",  align: "center", hide: 1},
+  welcomeClimate: {source: "function", key: "weatherText(weatherData)", prefix: "", suffix: "", x: "center", y: "center", w: "full", h: 100, font: "medium", color: "light",  align: "center", hide: 1},
+  welcomeTemp: {source: "weather", key: "temp", prefix: "SFSymbol|weatherID", suffix: "temperature", x: "center", y: "center + 150", w: 100, h: 120, font: "extraLarge", color: "light",  align: "center", hide: 1},
+  pendingUpdate: {source: "update", key: "", prefix: "SFSymbol|arrow.triangle.2.circlepath.circle.fill", suffix: "", x: "left_margin + 120", y: "top_margin + 110", w: 75, h: 75, font: "medium", color: red0,  align: "center", hide: 2},
+  dayOfMonth: {source: "text", key: "", prefix: "SFSymbol|dayOfMonth", suffix: "", x: "center", y: "bottom_margin - 100", w: 200, h: 200, font: "big", color: "light",  align: "center", hide: 1}, 
+  lastUpdated: {source: "function", key: "lastUpdate()", prefix: "[", suffix: "]", x: "left_margin + 25", y: "bottom_margin - 20", w: 200, h: 75, font: "small", color: "light",  align: "center", bold:false, hide: 0},
 };
 // ============================================== CONFIGURABLE SECTION (END) ============================================== //
 
@@ -318,6 +328,8 @@ const DEVICE_SCALE = Device.screenScale();
 
 /* Start script */
 
+writeLOG("Script started at " + new Date());
+
 const updateRequired = await checkUpdates();
 const calendarData = await fetchCalendar();
 const weatherData = await fetchWeather();
@@ -335,9 +347,12 @@ try {
 }
 if (config.runsInApp) {
   QuickLook.present(overlayImage);
+  writeLOG("Script ended at " + new Date());
   Script.complete();
-} else return overlayBase64String; // return to Shortcuts
-
+} else {
+  writeLOG("Script ended at " + new Date());
+  return overlayBase64String; // return to Shortcuts}
+}
 /*------------------------------------------------------------------------------------------------------------------
 *                                               FUNCTION DEFINITION
 ------------------------------------------------------------------------------------------------------------------*/
@@ -395,7 +410,7 @@ async function fetchWeather(){
   }
   try {
     if (response.cod == 401) {
-      writeLOG('Invalid API Key');
+      writeLOG('Invalid API Key. Proceeding with dummy data...');
       return unknownWeatherData;
     }
   } catch(error) {
@@ -493,12 +508,11 @@ async function createOverlay(weatherData, calendarData, quotesData) {
         continue; // Skip this element
       } else {
         if (Array.isArray(element)) repeat = true;
-        writeLOG(`Processing item ${layout[item].key} with value ${element}`);
       }
       if (hide == 1) {
-        writeLOG(`Hiding item ${layout[item].key}`);
+        writeLOG(`Hiding item ${item}`);
         continue;
-      }
+      } else writeLOG(`Processing item ${item} with value ${element}`);
 
       rect = new Rect(x,y,w,h)
 
@@ -673,7 +687,9 @@ FUNCTION updateLayout
 ------------------------------------------------------------------*/
 async function updateLayout(isNight, weatherID){
   const validLayouts = ['custom','welcome','minimalWeather','feelMotivated','minimalCalendar','showMyWork','maximalWeather'];
-  layout = eval(validLayouts.includes(LAYOUT) ? LAYOUT : 'custom');
+  layoutName = validLayouts.includes(LAYOUT) ? LAYOUT : 'custom';
+  layout = eval(layoutName);
+  writeLOG("Using layout " + layoutName);
   try {
     const imageSize=DEVICE_RESOLUTION;
     let TEMPERATURE_UNIT;
@@ -726,7 +742,8 @@ async function updateLayout(isNight, weatherID){
       }
       else {
         const fontName = (layout[item].font).split(".")[0];
-        const boldType = (layout[item].font).split(".")[1];
+        let boldType = (layout[item].font).split(".")[1];
+        if (layout[item].bold) boldType = 'bold';
         if (boldType == 'bold'){
           layout[item].font = eval(`${`allfonts.${fontName}.boldFont`}`);
           layout[item].bold = true;
@@ -754,9 +771,7 @@ async function updateLayout(isNight, weatherID){
             const day = (new Date()).getDate().toString().padStart(2,'0');
             symbolName = `${day}.circle.fill`;
           }
-          console.log("Symbols is " + symbolName);
           const symbol = SFSymbol.named(symbolName);
-          console.log("Symbol image is " + symbol);
           symbol.applyFont(layout[item].font);
           layout[item].prefix = symbol.image;
         }
@@ -774,8 +789,11 @@ async function updateLayout(isNight, weatherID){
           else layout[item].hide = 1;
         }
       }
-
+      // Handle some items manually
+      if ((item == 'workText' || item == 'workEvents') && CALENDAR_WORK_CALENDARS.length == 0) layout[item].hide = 1;
       if (layout[item].source == "update" && !updateRequired) layout[item].hide = 1;
+      if (item == 'lastUpdated' && SHOW_LAST_UPDATED_TIME) layout[item].hide = 0;
+      if (item == 'lastUpdated' && !SHOW_LAST_UPDATED_TIME) layout[item].hide = 1;
     }
   } catch (error) {
     errMsg = "updateLayout_" + error.message.replace(/\s/g,"_");
@@ -887,6 +905,7 @@ async function fetchQuotes(){
   try {
     writeLOG(`Fetching quotes at url: ${quotesURL}`);
     const request = new Request(quotesURL);
+    request.timeoutInterval = 30;
     response = await request.loadJSON();
   } catch (error) {
       writeLOG(`Couldn't fetch quotes from ${quotesURL}`);
@@ -927,6 +946,9 @@ async function fetchCalendar() {
   let calendarColors = {};
   const maxColors = CALENDAR_COLORS.length;
   let colorIdx = 0;
+  // Filter out falsy values
+  CALENDAR_PERSONAL_CALENDARS = CALENDAR_PERSONAL_CALENDARS.filter(x => x);
+  CALENDAR_WORK_CALENDARS = CALENDAR_WORK_CALENDARS.filter(x => x);
 
   // Fetch all personal calendar events for today and tomorrow
   for (const calendarName of CALENDAR_PERSONAL_CALENDARS) {
@@ -950,7 +972,7 @@ async function fetchCalendar() {
     const todayEvents = await CalendarEvent.today([calendar]);
     const tomorrowEvents = await CalendarEvent.tomorrow([calendar]);
     if (todayEvents.length > 0 || tomorrowEvents.length > 0){
-      calendarColors[calendarName] = CALENDAR_COLORS[colorIdx];
+      calendarColors[calendar.title] = CALENDAR_COLORS[colorIdx];
       colorIdx++;
       if (colorIdx >= maxColors) colorIdx = 0; // Repeat colors after max
     }
@@ -1049,7 +1071,6 @@ function formatEvents(eventsToday, eventsTomorrow, maxEvents, calendarColors, is
   const tomorrowText = "T O M O R R O W";
 
   if (isWork && CALENDAR_WORK_CALENDARS.length == 0) {
-    formatLine.push({rsize: DETAIL_RSIZE, title: CALENDAR_NOT_SET_TEXT});
     return formatLine;
   }
 
@@ -1072,6 +1093,7 @@ function formatEvents(eventsToday, eventsTomorrow, maxEvents, calendarColors, is
       }
       // Array of [Relative size, event title, calendar color]
       if (CALENDAR_SHOW_COLORS) formatLine.push({rsize: DETAIL_RSIZE, title: e.title, prefix: prefix, prefixColor: prefixColor, bold: bold});
+      // if (CALENDAR_SHOW_COLORS) formatLine.push({rsize: DETAIL_RSIZE, title: e.title, bold: bold});
       else formatLine.push({rsize: DETAIL_RSIZE, title: e.title});
       if (e.isAllDay) formatLine.push({rsize: FOOTER_RSIZE,title: "[ALL DAY]", bold: true});
       else {
@@ -1101,6 +1123,7 @@ function formatEvents(eventsToday, eventsTomorrow, maxEvents, calendarColors, is
       prefixColor = calendarColors[e.calendar.title];
       // Array of [Relative size, event title, calendar color]
       if (CALENDAR_SHOW_COLORS) formatLine.push({rsize: DETAIL_RSIZE,title: e.title, prefix: prefix, prefixColor: prefixColor});
+      // if (CALENDAR_SHOW_COLORS) formatLine.push({rsize: DETAIL_RSIZE,title: e.title});
       else formatLine.push({rsize: DETAIL_RSIZE,title: e.title});
       if (e.isAllDay) formatLine.push({rsize: FOOTER_RSIZE,title: "[ALL DAY]", bold: true});
       else {
@@ -1120,6 +1143,12 @@ function formatEvents(eventsToday, eventsTomorrow, maxEvents, calendarColors, is
   if (eventsToShow < eventsTomorrow.length) formatLine.push({rsize: FOOTER_RSIZE, title: `${eventsTomorrow.length - eventsToShow} more event(s)`});
 
   return formatLine;
+}
+function lastUpdate(){
+  let dt = new Date();
+  let hours = "0" + dt.getHours();
+  let minutes = "0" + dt.getMinutes();
+  return hours.substr(-2) + ':' + minutes.substr(-2);
 }
 /*------------------------------------------------------------------
 FUNCTION tintSFSymbol
@@ -1288,7 +1317,7 @@ FUNCTION checkUpdates
 ------------------------------------------------------------------*/
 async function checkUpdates(){
   // Version info
-  const VERSION = "2.1"; // DO NOT CHANGE THIS VALUE
+  const VERSION = "2.1.1"; // DO NOT CHANGE THIS VALUE
   if (UPDATE_CHECK_DAYS == 0) return false;
   versionURL = 'https://raw.githubusercontent.com/ajatkj/scriptable/master/lib/LSWeatherVersionInfo.json';
   let updateRequired = false;
@@ -1306,22 +1335,39 @@ async function checkUpdates(){
     oldVersion = 0;
     lastChecked = 0;
   }
-  writeLOG("Last checked date is " + lastChecked + " with version " + oldVersion);
-  if (oldVersion != VERSION) updateRequired = true;
+  writeLOG("Updates were last checked at " + lastChecked + " with version " + oldVersion);
+  if (oldVersion != VERSION && oldVersion != 0) {
+    updateRequired = true;
+    writeLOG("Update available, version: " + oldVersion + ", current version is " + VERSION);
+  }
   // Find when was last check done
-  let daysDiff = ((new Date(today)) - (new Date(lastChecked))) / (1000 * 3600 * 24);
+  if (lastChecked != 0) {
+    lc = lastChecked.split("/");
+    td = today.split("/");
+    daysDiff = ((new Date(+td[2], td[1] - 1, +td[0])) - (new Date(+lc[2], lc[1] - 1, +lc[0]))) / (1000 * 3600 * 24);
+  } else {
+    daysDiff = 999;
+  }
   if (daysDiff >= UPDATE_CHECK_DAYS || lastChecked == 0) {
     //Check for updates
-    let updateCheck = new Request(versionURL);
-    writeLOG(`Going to check current version at ${versionURL}`)
-    uC = await updateCheck.loadJSON()
-    if (uC.version != VERSION){
+    try {
+      let updateCheck = new Request(versionURL);
+      updateCheck.timeoutInterval = 10;
+      writeLOG(`Going to check current version at ${versionURL}`)
+      uC = await updateCheck.loadJSON()
       writeLOG("Found version: " + uC.version);
-      lastChecked = today;
-      fm.writeString(versionFile, JSON.stringify({"version": uC.version, "lastChecked": lastChecked}));
-      updateRequired = true;
-    } else if (lastChecked == 0) {
-      fm.writeString(versionFile, JSON.stringify({"version": VERSION, "lastChecked": today}));
+      if (uC.version != VERSION){
+        writeLOG("Update available, version: " + uC.version + ", current version is " + VERSION);
+        lastChecked = today;
+        fm.writeString(versionFile, JSON.stringify({"version": uC.version, "lastChecked": lastChecked}));
+        updateRequired = true;
+      } else if (lastChecked == 0) {
+        fm.writeString(versionFile, JSON.stringify({"version": VERSION, "lastChecked": today}));
+      }
+    } catch (error) {
+      errMsg = "updateCheck_" + error.message.replace(/\s/g,"_") + ".Proceeding_without_checks.";
+      writeLOG(errMsg);
+      updateRequired = false;
     }
   }
   return updateRequired;

@@ -99,6 +99,8 @@ iCloud Drive/
    - You can configure the number of days the script should look for an update by setting `UPDATE_CHECK_DAYS`.
    - Set above value to 0 to stop looking for updates (not recommended).
 
+1. To show/hide last wallpaper updated time set `SHOW_LAST_UPDATED_TIME` to `true` or `false`.
+
 1. To test the script without calling the openweather & quotable APIs set `TESTING` to `true`.
 
 1. To change the layout of the data elements update dictionary `layouts`. Checking items which you can change easily to play around with the layout.
