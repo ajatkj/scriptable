@@ -1,3 +1,8 @@
+# Table of Contents
+- [LSWeather](#lsweather)
+- [LSForecast](#lsforecast)
+___
+
 # LSWeather
 A Scriptable script to add weather & calendar information on the lock screen. The script is meant to be called from Shortcuts app.
 It is fully customizable script giving you access to change each data element on the lock screen. 
@@ -140,3 +145,53 @@ Below widgets/scripts have helped while coding for this script.
 ## Known Issues
 
 1. The API quotable is sometimes slow and doesn't respond on time. You can set `const QUOTE_SHOW_QUOTES = 'false'` to stop using this API if you are facing this problem.
+
+___
+
+# LSForecast
+A Scriptable script to add weather forecast to your lock screen. The script is meant to be called from Shortcuts app.
+The script generates an overlay image which is embedded on top of a wallpaper.
+
+![](images/LSForecast.png)
+
+## Installation
+1. Download and extract the content of this repository.
+1. Download the script `LSForecast.js` to **Scriptable** folder in your iCloud Drive.
+```
+iCloud Drive/
+├─ Scriptable/
+│  ├─ LSForecast.js
+```
+1. Launch Scriptable and make sure that `LSForecast` is listed in the Scripts view.
+1. Run the script to check if its working properly. A quicklook window with the default layout overlay will open.
+1. Configure wallpapers. You can use either Photos Album or iCloud Folder to use as source of wallpapers
+   - Photos Album
+     - Create an Album in Photos with name **LSForecast**.
+     - Add *some* wallpapers to this Album.
+     - Shortcut will automatically pick up a wallpaper at random from this album.
+   - iCloud Folder
+     - Create a folder in iCloud -> Shortcuts with the name **LSForecast**.
+     - Add *some* wallpapers to this folder.
+     - Shortcut will automatically pick up a wallpaper at random from this folder.
+1. Download and install this [shortcut](https://routinehub.co/shortcut/8378/).
+1. Configure the shortcut as mentioned below.
+1. Run the shortcut.
+
+## Shortcut Configuration
+
+1. Open the shortcut in Shortcuts app. 
+1. Set the dictionary key value `accent` to hexadecimal color code e.g. #FF00FF.
+1. Set the dictionary key value `alpha` to set the transparency of the graph. 0 is for fully transparent. 1 is opaque.
+1. Set the dictionary key value `apiKey` to your openWeather API key.
+   - Note: if `apiKey` is not passed from Shortcuts app, it should be defined in the LSForecast script.
+1. You can use either Photos Album or iCloud Folder to pick wallpapers for this script. To change that, look for the dictionary with `Photos` and `iCloud` boolean values and set either of them to `true`. Default is Photos.
+
+## Script Configuration
+
+1. To test the script without calling the openweather set `TESTING` to `true`.
+1. To generate logs when script is run through shortcut set `LOG_TO_FILE` to `true`.
+1. Check script logs in **LSForecastLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
+
+## APIs Used
+
+1. OpenWeather API - [https://openweathermap.org](https://openweathermap.org).
