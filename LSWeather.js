@@ -34,10 +34,10 @@ black = "#000000";
 // Logging parameters
 const LOG_FILE_NAME = "LSWeather.txt";
 const LOG_FILE_PATH = "LSWeatherLogs";
-const LOG_TO_FILE = false; // Only set to true if you want to debug any issue
+const LOG_TO_FILE = true; // Only set to true if you want to debug any issue
 let LOG_STEP = 1;
 
-const UPDATE_CHECK_DAYS = 7; // Check updates every 7 days, set 0 to stop update check
+const UPDATE_CHECK_DAYS = 0; // Check updates every 7 days, set 0 to stop update check
 const SHOW_LAST_UPDATED_TIME = true;
 
 // ============================================== CONFIGURABLE SECTION (START) ============================================== //
@@ -416,10 +416,9 @@ async function fetchWeather(){
     }
   } catch(error) {
     writeLOG("JSON Data: " + JSON.stringify(response));
-    const currentTime = new Date().getTime() / 1000;
-    isNight = currentTime >= response.current.sunset || currentTime <= response.current.sunrise;
   }
-
+  const currentTime = new Date().getTime() / 1000;
+  isNight = currentTime >= response.current.sunset || currentTime <= response.current.sunrise;
   return {
     loc: address[0].locality.toUpperCase(),
     weatherID: response.current.weather[0].id.toString(),
@@ -847,52 +846,38 @@ FUNCTION getWeatherSymbol
 function getWeatherSymbol(weatherID, isNight){
   // Check all weather IDs at https://openweathermap.org/weather-conditions#Weather-Condition-Codes-2
   if (weatherID >= 200 && weatherID <= 211){
-    if (isNight) return "cloud.moon.bolt";
-    else return "cloud.sun.bolt.fill";
+    return "cloud.moon.bolt.fill";
   } else if (weatherID > 211 && weatherID <= 232){
-    if (isNight) return "cloud.bolt.rain";
-    else return "cloud.bolt.rain.fill";
+    return "cloud.bolt.rain.fill";
   } else if (weatherID >= 300 && weatherID <= 311) {
-    if (isNight) return "cloud.drizzle";
-    else return "cloud.drizzle.fill";
+    return "cloud.drizzle.fill";
   } else if (weatherID > 311 && weatherID <= 321) {
-    if (isNight) return "cloud.rain";
-    else return "cloud.rain.fill";    
+    return "cloud.rain.fill";    
   } else if (weatherID >= 500 && weatherID <= 510) {
-    if (isNight) return "cloud.moon.rain";
-    else return "cloud.sun.rain.fill";    
+    return "cloud.sun.rain.fill";    
   } else if (weatherID == 511) {
-    if (isNight) return "cloud.hail";
-    else return "cloud.hail.fill";    
+    return "cloud.hail.fill";    
   } else if (weatherID > 511 && weatherID <= 531) {
-    if (isNight) return "cloud.heavyrain";
-    else return "cloud.heavyrain.fill";
+    return "cloud.heavyrain.fill";
   } else if (weatherID >= 600 && weatherID <= 602) {
-    if (isNight) return "snow";
-    else return "snow";
+    return "snow";
   } else if (weatherID > 602 && weatherID <= 613) {
-    if (isNight) return "cloud.sleet";
-    else return "cloud.sleet.fill";
+    return "cloud.sleet.fill";
   } else if (weatherID > 613 && weatherID <= 622) {
-    if (isNight) return "cloud.snow";
-    else return "cloud.snow.fill";
+    return "cloud.snow.fill";
   } else if (weatherID >= 701 && weatherID <= 731) {
-    if (isNight) return "sun.haze";
-    else return "sun.haze.fill";
+    return "sun.haze.fill";
   } else if (weatherID == 741) {
-    if (isNight) return "sun.fog";
-    else return "sun.fog.fill";
+    return "cloud.fog.fill";
   } else if (weatherID > 741 && weatherID <= 771) {
-    if (isNight) return "sun.dust";
-    else return "sun.dust.fill";
+    return "sun.dust.fill";
   } else if (weatherID == 781) {
-    if (isNight) return "tornado";
-    else return "tornado";
+    return "tornado";
   } else if (weatherID == 800) {
-    if (isNight) return "moon.stars";
+    if (isNight) return "moon.stars.fill";
     else return "sun.max.fill";
   } else if (weatherID >= 801 && weatherID <= 899) {
-    if (isNight) return "cloud.moon";
+    if (isNight) return "cloud.moon.fill";
     else return "cloud.sun.fill";
   } else return "exclamationmark.circle"
 }
