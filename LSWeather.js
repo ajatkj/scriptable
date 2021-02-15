@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------------------------------
 Script: LSWeather.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
-Date: 04.02.2021
-Version: 2.1
+Date: 15.02.2021
+Version: 2.1.2
 ------------------------------------------------------------------------------------------------------*/
 // This script generates an overlay image with weather, calendar & other details. 
 // The script is meant to be called from a Shortcut. 
@@ -34,6 +34,7 @@ black = "#000000";
 // Logging parameters
 const LOG_FILE_NAME = "LSWeather.txt";
 const LOG_FILE_PATH = "LSWeatherLogs";
+const LOG_TO_FILE = false; // Only set to true if you want to debug any issue
 let LOG_STEP = 1;
 
 const UPDATE_CHECK_DAYS = 7; // Check updates every 7 days, set 0 to stop update check
@@ -60,9 +61,9 @@ const CALENDAR_SHOW_CALENDARS = true;
 const CALENDAR_SHOW_ALL_DAY_EVENTS = true;
 const CALENDAR_SHOW_TOMORROW_EVENTS = true;
 const CALENDAR_SHOW_COLORS = true;
-let CALENDAR_WORK_CALENDARS = []; // Leave blank if you don't want to display any work calendar
+let CALENDAR_WORK_CALENDARS = ['Tithis','Weather']; // Leave blank if you don't want to display any work calendar
 const CALENDAR_WORK_MAX_EVENTS = 3;
-let CALENDAR_PERSONAL_CALENDARS = []; // Leave blank for using defualt iOS Calendar
+let CALENDAR_PERSONAL_CALENDARS = ['Gmail','Arsenal FC']; // Leave blank for using defualt iOS Calendar
 const CALENDAR_PERSONAL_MAX_EVENTS = 3;
 const CALENDAR_NO_EVENTS_TEXT = 'No Upcoming Events';
 const CALENDAR_NOT_SET_TEXT = 'Calendar Not Set';
@@ -482,6 +483,7 @@ async function createOverlay(weatherData, calendarData, quotesData) {
       align = layout[item].align;
       suffix = layout[item].suffix;
       prefix = layout[item].prefix;
+      prefixColor = layout[item].prefixColor;
       hide = layout[item].hide;
       repeat = false;
 
@@ -584,7 +586,7 @@ async function createOverlay(weatherData, calendarData, quotesData) {
           }
         } // Normal text element
         else {
-          imgCanvas = await placeDataElement(imgCanvas, rect, element, suffix, prefix, color, align, fontName, color, x,y,w,h, false);
+          imgCanvas = await placeDataElement(imgCanvas, rect, element, suffix, prefix, prefixColor, align, fontName, color, x,y,w,h, false);
         }
       }
     }
@@ -666,7 +668,7 @@ async function prefixImage(prefixImage, text, fontName, prefixColor, overrideCol
     prefixCanvas=new DrawContext();
     prefixCanvas.opaque = false;
     prefixCanvas.size = new Size(pW + dW + gap,oH);
-    prefixImage = await tintSFSymbol(prefixImage, new Color(prefixColor));
+    if (prefixColor != "#######") prefixImage = await tintSFSymbol(prefixImage, new Color(prefixColor));
     // Draw prefixImage at (x,y) = (0,0)
     prefixCanvas.drawImageAtPoint(prefixImage, new Point(0,0));
     
@@ -686,6 +688,7 @@ async function prefixImage(prefixImage, text, fontName, prefixColor, overrideCol
 FUNCTION updateLayout
 ------------------------------------------------------------------*/
 async function updateLayout(isNight, weatherID){
+  const coloredSFSymbols = ['wind','sunset','sunrise','cloud','sun','snow','tornado'];
   const validLayouts = ['custom','welcome','minimalWeather','feelMotivated','minimalCalendar','showMyWork','maximalWeather'];
   layoutName = validLayouts.includes(LAYOUT) ? LAYOUT : 'custom';
   layout = eval(layoutName);
@@ -767,6 +770,7 @@ async function updateLayout(isNight, weatherID){
               layout[item].source = "text";
               layout[item].key = "";
             }
+            layout[item].prefixColor = "#######";
           } else if (symbolName == 'dayOfMonth') {
             const day = (new Date()).getDate().toString().padStart(2,'0');
             symbolName = `${day}.circle.fill`;
@@ -774,6 +778,8 @@ async function updateLayout(isNight, weatherID){
           const symbol = SFSymbol.named(symbolName);
           symbol.applyFont(layout[item].font);
           layout[item].prefix = symbol.image;
+          if (coloredSFSymbols.includes(symbolName.split(".")[0])) layout[item].prefixColor = "#######";
+          else layout[item].prefixColor = layout[item].color;
         }
         // Everything else remains untouched
       }
@@ -1216,7 +1222,7 @@ async function getTextWidth(text, font){
 FUNCTION writeLOG
 ------------------------------------------------------------------*/
 async function writeLOG(logMsg){
-  if (!config.runsInApp) {
+  if (!config.runsInApp && LOG_TO_FILE) {
     const fm = FileManager.iCloud();
     let logPath = fm.joinPath(fm.documentsDirectory(), LOG_FILE_PATH);
     if (!fm.fileExists(logPath)) fm.createDirectory(logPath);
@@ -1317,7 +1323,7 @@ FUNCTION checkUpdates
 ------------------------------------------------------------------*/
 async function checkUpdates(){
   // Version info
-  const VERSION = "2.1.1"; // DO NOT CHANGE THIS VALUE
+  const VERSION = "2.1.2"; // DO NOT CHANGE THIS VALUE
   if (UPDATE_CHECK_DAYS == 0) return false;
   versionURL = 'https://raw.githubusercontent.com/ajatkj/scriptable/master/lib/LSWeatherVersionInfo.json';
   let updateRequired = false;

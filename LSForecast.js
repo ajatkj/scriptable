@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------------------------------
 Script: LSForecast.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
-Date: 11.02.2021
-Version: 1.0
+Date: 15.02.2021
+Version: 1.1
 ------------------------------------------------------------------------------------------------------*/
 // This script generates an overlay image with weather forecast
 // The script is meant to be called from a Shortcut. 
@@ -23,6 +23,7 @@ let NO_OF_DAYS = 7;
 
 const WEATHER_UNITS = 'metric';
 const WEATHER_LANG = 'en';
+const WEATHER_SHOW_HOURLY_ICONS = true;
 
 // API key for openweather. 
 let WEATHER_API_KEY = '';
@@ -171,6 +172,9 @@ function createOverlay() {
       weatherData.hourly[i] = {};
       weatherData.hourly[i].dt = t0;
       weatherData.hourly[i].temp = 0;
+      weatherData.hourly[i].weather = [];
+      weatherData.hourly[i].weather[0] = {};
+      weatherData.hourly[i].weather[0].id = 999;
     }
     t0 = Math.round(new Date().getTime() / 1000);
     t1 = 0;
@@ -292,9 +296,19 @@ function createOverlay() {
     closedCurvePath.addLine(new Point(xStart,yStart + y));
     // Create path for bottom line
     linePoints.push(new Point(xStart,yBottom));
-    // Print temperature
-    r = new Rect(xStart - (blockWidth/2), yStart + y - blockHeight, blockWidth, blockHeight)
-    imgCanvas.drawTextInRect(Math.round(t).toString() + "°",r);
+    // Print temperature and/or weather symbol
+    if (WEATHER_SHOW_HOURLY_ICONS) {
+      weatherSymbol = SFSymbol.named(getWeatherSymbol(weatherData.hourly[i].weather[0].id));
+      weatherSymbol.applyFont(allfonts.small.font);
+      image = weatherSymbol.image;
+      r = new Rect (xStart - (blockWidth/2), yStart + y - blockHeight, image.size.width,image.size.height);
+      imgCanvas.drawImageInRect(image,r);
+      r = new Rect(xStart - (blockWidth/2), yStart + y + 5, blockWidth, blockHeight)
+      imgCanvas.drawTextInRect(Math.round(t).toString() + "°",r);
+    } else {
+      r = new Rect(xStart - (blockWidth/2), yStart + y - blockHeight, blockWidth, blockHeight)
+      imgCanvas.drawTextInRect(Math.round(t).toString() + "°",r);
+    }
     // Print time
     if (i == 0) time = "now";
     else time = convertFromUTC(weatherData.hourly[i].dt, 1)

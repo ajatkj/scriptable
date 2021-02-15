@@ -126,7 +126,9 @@ iCloud Drive/
    - [x] hide: 0 or null to show this data element, 1 to hide, 2 for sunrise/sunset only (to show only 1 of them based on the time of the day).
    - [x] bold: make text bold. Valid values are true or false.
 
-1. Check script logs in **LSWeatherLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
+1. Logging
+   - To generate logs in the iCloud drive when script is run through shortcut set `LOG_TO_FILE` to `true`. Only set this to true to debug an issue.
+   - Check script logs in **LSWeatherLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
 
 ## APIs Used
 
@@ -188,8 +190,9 @@ iCloud Drive/
 
 ## Script Configuration
 
+1. To show/hide weather icons for hourly forecast set `WEATHER_SHOW_HOURLY_ICONS` to either `true` or `false`
 1. To test the script without calling the openweather set `TESTING` to `true`.
-1. To generate logs when script is run through shortcut set `LOG_TO_FILE` to `true`.
+1. To generate logs when script is run through shortcut set `LOG_TO_FILE` to `true`. Only set this to true to debug an issue.
 1. Check script logs in **LSForecastLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
 
 ## APIs Used
