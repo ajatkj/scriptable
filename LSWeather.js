@@ -2,7 +2,7 @@
 Script: LSWeather.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
 Date: 15.02.2021
-Version: 2.1.2
+Version: 2.1.3
 ------------------------------------------------------------------------------------------------------*/
 // This script generates an overlay image with weather, calendar & other details. 
 // The script is meant to be called from a Shortcut. 
@@ -846,33 +846,47 @@ FUNCTION getWeatherSymbol
 function getWeatherSymbol(weatherID, isNight){
   // Check all weather IDs at https://openweathermap.org/weather-conditions#Weather-Condition-Codes-2
   if (weatherID >= 200 && weatherID <= 211){
-    return "cloud.moon.bolt.fill";
+    if (isNight) return "cloud.moon.bolt.fill";
+    else return "cloud.sun.bolt.fill";
   } else if (weatherID > 211 && weatherID <= 232){
-    return "cloud.bolt.rain.fill";
+    if (isNight) return "cloud.bolt.rain.fill";
+    else return "cloud.bolt.rain.fill";
   } else if (weatherID >= 300 && weatherID <= 311) {
-    return "cloud.drizzle.fill";
+    if (isNight) return "cloud.drizzle.fill";
+    else return "cloud.drizzle.fill";
   } else if (weatherID > 311 && weatherID <= 321) {
-    return "cloud.rain.fill";    
+    if (isNight) return "cloud.moon.rain.fill";
+    else return "cloud.moon.rain.fill";    
   } else if (weatherID >= 500 && weatherID <= 510) {
-    return "cloud.sun.rain.fill";    
+    if (isNight) return "cloud.moon.rain.fill";
+    else return "cloud.sun.rain.fill";    
   } else if (weatherID == 511) {
-    return "cloud.hail.fill";    
+    if (isNight) return "cloud.hail.fill";
+    else return "cloud.hail.fill";    
   } else if (weatherID > 511 && weatherID <= 531) {
-    return "cloud.heavyrain.fill";
+    if (isNight) return "cloud.heavyrain.fill";
+    else return "cloud.heavyrain.fill";
   } else if (weatherID >= 600 && weatherID <= 602) {
-    return "snow";
+    if (isNight) return "snow";
+    else return "snow";
   } else if (weatherID > 602 && weatherID <= 613) {
-    return "cloud.sleet.fill";
+    if (isNight) return "cloud.sleet.fill";
+    else return "cloud.sleet.fill";
   } else if (weatherID > 613 && weatherID <= 622) {
-    return "cloud.snow.fill";
+    if (isNight) return "cloud.snow.fill";
+    else return "cloud.snow.fill";
   } else if (weatherID >= 701 && weatherID <= 731) {
-    return "sun.haze.fill";
+    if (isNight) return "sun.haze.fill";
+    else return "sun.haze.fill";
   } else if (weatherID == 741) {
-    return "cloud.fog.fill";
+    if (isNight) return "cloud.fog.fill";
+    else return "cloud.fog.fill";
   } else if (weatherID > 741 && weatherID <= 771) {
-    return "sun.dust.fill";
+    if (isNight) return "sun.dust.fill";
+    else return "sun.dust.fill";
   } else if (weatherID == 781) {
-    return "tornado";
+    if (isNight) return "tornado";
+    else return "tornado";
   } else if (weatherID == 800) {
     if (isNight) return "moon.stars.fill";
     else return "sun.max.fill";
