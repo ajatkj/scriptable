@@ -154,7 +154,7 @@ ___
 A Scriptable script to add weather forecast to your lock screen. The script is meant to be called from Shortcuts app.
 The script generates an overlay image which is embedded on top of a wallpaper.
 
-![](images/LSForecast.png)
+![](images/LSForecast.png) ![](images/LSForecast_POP_Night.png)
 
 ## Installation
 1. Download and extract the content of this repository.
@@ -191,9 +191,17 @@ iCloud Drive/
 ## Script Configuration
 
 1. To show/hide weather icons for hourly forecast set `WEATHER_SHOW_HOURLY_ICONS` to either `true` or `false`
+1. To show/hide POP (probability of precipitation graph) hourly forecast set `WEATHER_SHOW_POP_GRAPH` to either `true` or `false`
+1. To show/hide POP values set `WEATHER_SHOW_POP_VALUES` to either `true` or `false`
+1. To show/hide POP graph when POP data is not available (i.e. 0), set `WEATHER_SHOW_ZERO_POP_VALUES` to either `true` or `false`
 1. To test the script without calling the openweather set `TESTING` to `true`.
 1. To generate logs when script is run through shortcut set `LOG_TO_FILE` to `true`. Only set this to true to debug an issue.
 1. Check script logs in **LSForecastLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
+
+## Languages Supported
+1. English (en), Portuguese (pt), Spanish (es), French (fr), German (de), Hindi (hi).
+   - Translations are done using google translate so might not be accurated.
+1. Raise an issue in GitHub or email me at <ajatkj@yahoo.co.in> to fix a translation issue or add translation for new language.
 
 ## APIs Used
 
