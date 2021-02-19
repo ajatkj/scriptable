@@ -453,7 +453,7 @@ function createOverlay() {
   imgCanvas.setTextAlignedLeft();
   imgCanvas.setTextColor(new Color(textColor));
   r = new Rect (xStart, yStart, DEVICE_RESOLUTION.width ,100);
-  imgCanvas.drawTextInRect(`${labels. k}`,r);
+  imgCanvas.drawTextInRect(`${labels.thisWeek}`,r);
 
   yStart = yStart + 100;
 
