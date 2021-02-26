@@ -1,6 +1,7 @@
 # Table of Contents
 - [LSWeather](#lsweather)
 - [LSForecast](#lsforecast)
+- [FavContacts](#favcontacts)
 ___
 
 # LSWeather
@@ -206,3 +207,84 @@ iCloud Drive/
 ## APIs Used
 
 1. OpenWeather API - [https://openweathermap.org](https://openweathermap.org).
+
+___
+
+# FavContacts
+A Scriptable Favourite Contact's widget to quickly call, message, facetime & more your favourite contacts.
+Widgets are available in all 3 sizes.
+
+![](images/FavContactsWidgets.png)
+
+## Installation
+1. Download and extract the content of this repository.
+1. Download the script `FavContacts.js` to **Scriptable** folder in your iCloud Drive.
+```
+iCloud Drive/
+├─ Scriptable/
+│  ├─ FavContacts.js
+```
+1. Launch Scriptable and make sure that `FavContacts` is listed in the Scripts view.
+1. Run the script to check if its working properly. A quicklook widget with the default settings will open.
+
+## Features
+1. Call, message, facetime, mail, whatsapp, telegram your favourite people directly from home screen.
+1. You can set up-to 4 actions (including the default action to call when you click on the avatar).
+1. Easily configure different avatar styles and quick actions.
+1. Nearly 40 awesome color themes to chose from.
+Note: Due to iOS restrictions, any action on Widget will first call scriptable app and then call the respective action. 
+
+## Set-up Favourties
+There are 3 ways to set-up favourite contacts list. Listing them here in order of preference.
+1. Favourites Group: Create a group name "Favourites" in Contacts app via iCloud or any other app or sync service which provides it. Add contacts to this group.
+1. If you cannot do option 1, you can "mark" individual contacts to be picked up by this script using following method-
+   - Go to the contact you want to mark favourite, click on **Edit**
+   - Scroll down and click on the **+** sign next to **add social profile**
+   - Click on the default profile name and scroll down to the bottom and click on **Add Custom Service**
+   - Give the service name as **Scriptable** and Social Profile as **Scriptable** as shown below.
+   ![](images/FavContactsContact.jpg)
+   - Click on Done.
+1. You can also provide contact names in the script manually. This is not recommended as it will get over-written everytime you update the script.
+```
+let allcontacts = [
+    {firstname: 'Firstname', lastname: 'Lastname'},
+    {firstnmae: 'Another', lastname: 'Contact'},
+]
+```
+1. Run the script in-app to update the contacts cache which is used to show contacts on the widget.
+1. **Note: You will need to run the script *in-app* everytime you make any changes to contact list using either of the 3 options above**
+
+## Script Configuration
+
+1. Choose different avatar styles ("contact" or "initials") by setting `AVATAR_STYLE`.
+1. Choose from around 40 awesome themes by setting `THEME`. Refer themes section below.
+1. Set array `ITEMS_TO_SHOW` to set quick actions. Choose from "facetimeVideo","facetimeAudio","message","email","sparkEmail","googleEmail","outlookEmail","whatsapp","telegram".
+   Supported apps are-
+   - Messages
+   - Facetime Audio/Video
+   - Whatsapp
+   - Telegram
+   - Default mail client
+   - Spark Mail
+   - Google Mail
+   - Outlook Mail
+1. Set no. of quick action items to display using `NO_OF_ITEMS_TO_SHOW`. Minimum value 2, maximum 3.
+1. For testing purpose you can use `SHOW_GUIDES` and `PREVIEW WIDGET` variables.
+
+## Widget Configuration
+1. Add multiple widgets by passing widget no. in widget arguments. 
+   - No argument or widget no. 0 defaults to 1st widget
+   `1`
+1. Set-up different color themes for different widgets.
+   `{"theme": "electricBlueAqua}`
+1. Use different avatar style for different widgets.
+   `{"avatar": "contact"}` or `{"avatar": "initials"}`
+1. Combine one or more arguments above: Set-up widget no. 2 with theme *islandGreen* as-
+   `2,{"theme": "islandGreen", "avatar": "initials"}`
+![](images/FavContactsSettings.png)
+
+## Themes
+![](images/FavContactsThemes.png)
+
+Theme names should be in *camelCase*. Ex. **Sailor Blue Mint** is **sailorBlueMint** and so on.
+Note: Some themes are inspired by Moleskine Studio's Timepage app. Must download app!
