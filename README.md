@@ -256,9 +256,11 @@ let allcontacts = [
 
 ## Script Configuration
 
-1. Choose different avatar styles ("contact" or "initials") by setting `AVATAR_STYLE`.
+1. To show/hide contact names set `SHOW_NAMES` to either `true` or `false`.
+1. Choose different avatar styles ("contact", "symbol" or "initials") by setting `AVATAR_STYLE`.
 1. Choose from around 40 awesome themes by setting `THEME`. Refer themes section below.
-1. Set array `ITEMS_TO_SHOW` to set quick actions. Choose from "facetimeVideo","facetimeAudio","message","email","sparkEmail","googleEmail","outlookEmail","whatsapp","telegram".
+1. Set array `ITEMS_TO_SHOW` to set quick actions. 
+   Choose from "facetimeVideo", "facetimeAudio", "message", "email", "spark", "gmail", "outlook", "whatsapp", "telegram", "twitter", "tweetbot", "twitterrific".
    Supported apps are-
    - Messages
    - Facetime Audio/Video
@@ -266,10 +268,20 @@ let allcontacts = [
    - Telegram
    - Default mail client
    - Spark Mail
-   - Google Mail
+   - Google Mail (Gmail)
    - Outlook Mail
-1. Set no. of quick action items to display using `NO_OF_ITEMS_TO_SHOW`. Minimum value 2, maximum 3.
+   - Twitter
+   - Tweetbot
+   - Twitterrific
+   * Note: to use twitter quick action, set Social Profile for "Twitter" with users twitter handle.
+
+   ![](images/FavContactsTwitter.png)
+
+1. Set no. of quick action items to display using `NO_OF_ITEMS_TO_SHOW`. Minimum value 2, maximum 3. Set it to 0 to hide all actions.
 1. For testing purpose you can use `SHOW_GUIDES` and `PREVIEW WIDGET` variables.
+1. For minimal set-up, set `SHOW_NAMES` to `false` and `NO_OF_ITEMS_TO_SHOW` to `0`.
+
+![](images/FavContactsMinimal.png)
 
 ## Widget Configuration
 1. Add multiple widgets by passing widget no. in widget arguments. 
@@ -281,10 +293,12 @@ let allcontacts = [
    `{"avatar": "contact"}` or `{"avatar": "initials"}`
 1. Combine one or more arguments above: Set-up widget no. 2 with theme *islandGreen* as-
    `2,{"theme": "islandGreen", "avatar": "initials"}`
+
 ![](images/FavContactsSettings.png)
 
 ## Themes
 ![](images/FavContactsThemes.png)
 
 Theme names should be in *camelCase*. Ex. **Sailor Blue Mint** is **sailorBlueMint** and so on.
+
 Note: Some themes are inspired by Moleskine Studio's Timepage app. Must download app!

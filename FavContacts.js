@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------------------------------
 Script: FavContacts.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
-Date: 26.02.2021
-Version: 1.0
+Date: 02.03.2021
+Version: 1.1
 ------------------------------------------------------------------------------------------------------*/
 // This script generates a widget with your favourite contacts to quickly call, message, facetime etc.
 // right from your home screen.
@@ -17,19 +17,18 @@ let allcontacts = [
     {firstname: 'Firstname', lastname: 'Lastname'},
 ]
 // ============================================== CONFIGURABLE SECTION (START) ============================================== //
-// valid avatar styles are "contact" or "initials"
+// valid avatar styles are "contact", "symbol" or "initials"
 let AVATAR_STYLE = "contact"
 let THEME = "antwerpBlue";
-
-//Minimum 2, maximum 3;
-let NO_OF_ITEMS_TO_SHOW = 2;
-// Valid values are "message","facetimeVideo","facetimeAudio","whatsapp","telegram","email"
-let ITEMS_TO_SHOW = ["facetimeVideo","message","whatsapp","sparkEmail","googleEmail"];
+let SHOW_NAMES = false;
+let NO_OF_ITEMS_TO_SHOW = 2; // Minimum 2, maximum 3;
+// Valid values are "message","facetimeVideo","facetimeAudio","whatsapp","telegram","email","outlook","gmail","spark","twitter","twitterrific","tweetbot"
+let ITEMS_TO_SHOW = ["twitter","facetimeVideo","message","whatsapp","spark","gmail"];
 const CONTACTS_SYMBOL_STYLE = "person.circle.fill"; // Should be a valid SF Symbol
 
 // ============================================== CONFIGURABLE SECTION (END) ============================================== //
 // Variables used for testing
-const PREVIEW_WIDGET = 'medium';
+const PREVIEW_WIDGET = 'large';
 const SHOW_GUIDES = false;
 const LOG_FILE_NAME = "FavContacts.txt";
 const LOG_FILE_PATH = "FavContactsLogs";
@@ -66,9 +65,12 @@ itemList = {
     // signal: {symbol: "circle.dashed.inset.fill", initial: "L", url: "sgnl://", use: "phone"},
     telegram: {symbol: "paperplane.circle.fill", url: "telegram://", use: "phone"},
     email: {symbol: "envelope.circle.fill", url: "message://", use: "email"},
-    sparkEmail: {symbol: "envelope.circle.fill", initial: "S", url: "readdle-spark://compose?recipient=", use: "email"},
-    outlookEmail: {symbol: "envelope.circle.fill", initial: "O", url: "ms-outlook://compose?to=", use: "email"},
-    googleEmail: {symbol: "envelope.circle.fill", initial: "G", url: "googlegmail://co?to=", use: "email"},
+    spark: {symbol: "envelope.circle.fill", initial: "S", url: "readdle-spark://compose?recipient=", use: "email"},
+    outlook: {symbol: "envelope.circle.fill", initial: "O", url: "ms-outlook://compose?to=", use: "email"},
+    gmail: {symbol: "envelope.circle.fill", initial: "G", url: "googlegmail://co?to=", use: "email"},
+    twitter: {symbol: null, initial: "t", url: "twitter://user?screen_name=", use: "twitter"},
+    twitterrific: {symbol: null, initial: "t", url: "twitterrific://current/profile?screen_name=", use: "twitter"},
+    tweetbot: {symbol: null, initial: "t", url: "tweetbot://current/user_profile/", use: "twitter"},
 }
 
 // Some of the Color schemes are inspired from Moleskine Time Page app
@@ -159,6 +161,13 @@ Script.complete();
 // -------------------------------------------------------------------------------------------------------------------
 
 async function createWidget(contacts){
+    let fm = FileManager.local();
+    const iCloudUsed = fm.isFileStoredIniCloud(module.filename);
+    fm = iCloudUsed ? FileManager.iCloud() : fm;
+    const widgetFolder = "Favcon";
+    const offlinePath = fm.joinPath(fm.documentsDirectory(), widgetFolder);
+    const imagePath = fm.joinPath(offlinePath,"images");
+
     let dynamicBCG, dynamicText, lightText, darkText, lightBCG, darkBCG;
     // Discard invalid values from ITEMS_TO_SHOW array
     ITEMS_TO_SHOW = ITEMS_TO_SHOW.filter(i => Object.keys(itemList).some(o => o === i))
@@ -176,10 +185,10 @@ async function createWidget(contacts){
     if (contactsList.length == 0) {
         [dynamicBCG, dynamicText] = getDynamicColors(1);
         const widget = new ListWidget();
-        widget.setPadding(0,0,0,0);
-        widget.backgroundColor = new Color(dynamicBCG);
+        widget.setPadding(5,5,5,5);
+        widget.backgroundColor = dynamicBCG;
         widget.addSpacer();
-        widget.url = "https://github.com/ajatkj/scriptable";
+        widget.url = "https://github.com/ajatkj/scriptable#favcontacts";
         t = widget.addText("Set-up your contact list. Click here for more details.");
         t.font = bigFont;
         t.textColor = dynamicText;
@@ -197,7 +206,7 @@ async function createWidget(contacts){
             large: {lines: ['You don\'t need ', '_widgetNo_ _widgetType_ widgets!!', '','You have favourited', 'only _contacts_ contacts.'], size: 26},
         }
         const widget = new ListWidget();
-        widget.backgroundColor = new Color(dynamicBCG);
+        widget.backgroundColor = dynamicBCG;
         const stack = widget.addStack();
         stack.layoutVertically();
         stack.setPadding(5,5,5,5);
@@ -270,6 +279,8 @@ async function createWidget(contacts){
         let name = contacts[c].givenName;
         let lastName = contacts[c].familyName;
         let em = contacts[c].emailID;
+        let tw = contacts[c].twitter;
+        let radiusDelta = 10;
 
         // Create main stack
         if (i < 4) stack0 = mainStack1.addStack();
@@ -285,11 +296,14 @@ async function createWidget(contacts){
         nameStack.centerAlignContent();
         if (SHOW_GUIDES) nameStack.backgroundColor = Color.blue();
         nameStack.addSpacer();
-        t = nameStack.addText(name);
-        t.font = mainFont;
-        t.minimumScaleFactor = 1;
-        t.lineLimit = 1;
-        t.textColor = dynamicText;
+        if (SHOW_NAMES) {
+            t = nameStack.addText(name);
+            t.font = mainFont;
+            t.minimumScaleFactor = 1;
+            t.lineLimit = 1;
+            t.textColor = dynamicText;
+            radiusDelta = 0;
+        }
         nameStack.addSpacer();
         stack0.addSpacer();
 
@@ -299,11 +313,27 @@ async function createWidget(contacts){
         avatarStack.addSpacer();
         if (SHOW_GUIDES) avatarStack.backgroundColor = Color.cyan();
         
-        if (AVATAR_STYLE == "contact") {
+        if (AVATAR_STYLE == "symbol") {
             avatar = drawAvatar(sfSymbol, name, lastName, dynamicText, dynamicBCG);
             n = avatarStack.addImage(avatar);
             n.minimumScaleFactor = 0.5;
             n.tintColor = dynamicText;
+        } else if (AVATAR_STYLE == "contact"){
+            imageName = fm.joinPath(imagePath,c + ".png");
+            if (fm.fileExists(imageName)) {
+                avatar = fm.readImage(imageName);
+                n = avatarStack.addImage(avatar);
+                n.minimumScaleFactor = 0.5;
+                n.containerRelativeShape = false;
+                if (MAX_CONTACTS == 1) n.cornerRadius = 50 + radiusDelta;
+                else n.cornerRadius = 34;
+                n.borderWidth = 6;
+                n.borderColor = dynamicText;
+            } else {
+                avatar = drawAvatar(null, name, lastName, dynamicText, dynamicBCG);
+                n = avatarStack.addImage(avatar);
+                n.minimumScaleFactor = 0.5;                
+            }
         } else { // For style "initials"
             avatar = drawAvatar(null, name, lastName, dynamicText, dynamicBCG);
             n = avatarStack.addImage(avatar);
@@ -323,13 +353,15 @@ async function createWidget(contacts){
 
         if (SHOW_GUIDES) bottomStack.backgroundColor = Color.yellow();
         
-        // Remove all email types from items list if email ID is not present
+        // Remove all quick actions which are not applicable
         itemsToShow = ITEMS_TO_SHOW;
-        if (em == "0") itemsToShow = ITEMS_TO_SHOW.filter(function(it,idx,arr) {return !it.match(/email/i)})
+        if (em == "0") itemsToShow = ITEMS_TO_SHOW.filter(function(it,idx,arr) {return eval(`itemList.${it}.use`) !== 'email'})
+        if (tw == "0") itemsToShow = ITEMS_TO_SHOW.filter(function(it,idx,arr) {return eval(`itemList.${it}.use`) !== 'twitter'})
 
         itemsToShow.slice(0,NO_OF_ITEMS_TO_SHOW).forEach(function(itemName){
             toUse = eval(`itemList.${itemName}.use`);
-            if (toUse == "phone") itemToUse = p;
+            if (toUse == "twitter") itemToUse = tw;
+            else if (toUse == "phone") itemToUse = p;
             else if (toUse == "email") itemToUse = em;
             else if (p == "0") itemToUse = em;
             else itemToUse = p;
@@ -429,6 +461,8 @@ function getDynamicColors(itemNo){
 }
 
 async function loadContacts(){
+    const MAX_WIDTH = 200;
+    const MAX_HEIGHT = 200;
     const GROUP_NAME = "Favourites";
     const PROFILE_NAME = "SCRIPTABLE"
     let containers = await ContactsContainer.all()
@@ -460,7 +494,9 @@ async function loadContacts(){
     fm = iCloudUsed ? FileManager.iCloud() : fm;
     const widgetFolder = "Favcon";
     const offlinePath = fm.joinPath(fm.documentsDirectory(), widgetFolder);
+    const imagePath = fm.joinPath(offlinePath,"images");
     if (!fm.fileExists(offlinePath)) fm.createDirectory(offlinePath);
+    if (!fm.fileExists(imagePath)) fm.createDirectory(imagePath);
     contactsFile = fm.joinPath(offlinePath,'contacts.json');
 
     contactList = {};
@@ -472,7 +508,34 @@ async function loadContacts(){
             else phoneNumber = f.phoneNumbers[0].value;
             if (!f.isEmailAddressesAvailable || f.emailAddresses == "") emailID = "0";
             else emailID = f.emailAddresses[0].value;
-            contactList[f.identifier] = {givenName: f.givenName, familyName: f.familyName, sfSymbol: CONTACTS_SYMBOL_STYLE, nickName: f.nickName, phoneNumber: phoneNumber, emailID: emailID};
+            twitterProfile = f.socialProfiles.filter(s => s.service.toUpperCase() === 'TWITTER');
+            if (twitterProfile.length > 0) {
+                twitter = twitterProfile[0].username;
+            } else twitter = "0";
+            contactList[f.identifier] = {givenName: f.givenName, familyName: f.familyName, sfSymbol: CONTACTS_SYMBOL_STYLE, nickName: f.nickName, phoneNumber: phoneNumber, emailID: emailID, twitter: twitter};  
+        }
+        try {
+            if (f.isImageAvailable || f.image !== null) {
+                // Resize the image
+                img = f.image;
+                ratio = Math.max(MAX_WIDTH/img.size.width,MAX_HEIGHT/img.size.height);
+                newW = img.size.width * ratio;
+                newH = img.size.height * ratio;
+                imgCanvas = new DrawContext();
+                imgCanvas.size = new Size(newW,newH);
+                r = new Rect(0,0,newW,newH);
+                imgCanvas.drawImageInRect(f.image,r);
+                // Then align the image
+                imgCanvas1 = new DrawContext();
+                imgCanvas1.opaque = false;
+                imgCanvas1.size = new Size(MAX_WIDTH,MAX_HEIGHT);
+                imgCanvas1.drawImageAtPoint(imgCanvas.getImage(), new Point(0,0))
+                imageName = fm.joinPath(imagePath,f.identifier + ".png");
+                // Save image to iCloud drive
+                fm.writeImage(imageName,imgCanvas1.getImage())
+            }
+        } catch (error) {
+            writeLOG("No image available for " + f.givenName)
         }
         i++;
     })
