@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------------------------------
 Script: FavContacts.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
-Date: 02.03.2021
-Version: 1.1
+Date: 21.03.2021
+Version: 2.0
 ------------------------------------------------------------------------------------------------------*/
 // This script generates a widget with your favourite contacts to quickly call, message, facetime etc.
 // right from your home screen.
@@ -34,6 +34,7 @@ const LOG_FILE_NAME = "FavContacts.txt";
 const LOG_FILE_PATH = "FavContactsLogs";
 const LOG_TO_FILE = true; // Only set to true if you want to debug any issue
 let LOG_STEP = 1;
+let WIDGET_POSITION = "bottom";
 
 let WIDGET_NO = 1;
 // Pass argument in the form: widgetNo, {"theme": "color", "avatar": "contact"}
@@ -49,6 +50,13 @@ if (config.runsInWidget && args.widgetParameter) {
         param = JSON.parse(params)
         if (typeof param.theme !== 'undefined') THEME = param.theme;
         if (typeof param.avatar !== 'undefined') AVATAR_STYLE = param.avatar;
+        // For small widgets: top-left, top-right, middle-left, middle-right, bottom-left, bottom-right;
+        // For medium widgets: top, middle, bottom;
+        // For large widgets: top, bottom;
+        if (typeof param.pos !== 'undefined') {
+            WIDGET_POSITION = param.pos;
+            THEME = "transparent";
+          }
     }
 }
 
@@ -98,6 +106,7 @@ allColors = {
     white: ["F4FAFA","EAEDED","181D21","181D21"],
     classic: ["181D21","F4FAFA","181D21","F4FAFA"],
     classicGrey: ["2C2C2E","1C1C1E","F4FAFA","F4FAFA"],
+    black: ["000000","000000","F4FAFA","F4FAFA"],
     // Contrasting color themes
     ultraViolet: ["5F4B8B","E69A8D","F4FAFA","F4FAFA"],
     blueOrange: ["00A4CC","F95700","F4FAFA","F4FAFA"],
@@ -117,10 +126,10 @@ allColors = {
     powderedSugar: ["F1F4FF","A2A2A1","F1F4FF","A2A2A1"],
     lemonPurple: ["FCF951","422057","F1F4FF","422057"],
     fieryRedTeal: ["4B878B","D01C1F","FCF6F5","FCF6F5"],
+    transparent: ["181D21","181D21","FCF6F5","FCF6F5"],
 }
 
-widgetType = config.widgetFamily ? config.widgetFamily : PREVIEW_WIDGET;
-
+widgetType = config.widgetFamily ? config.widgetFamily : PREVIEW_WIDGET;0
 if (widgetType == "small") {
     MAX_CONTACTS = 1;
     NO_OF_ITEMS_TO_SHOW = 0;
@@ -144,6 +153,8 @@ const widgetFolder = "Favcon";
 const offlinePath = fm.joinPath(fm.documentsDirectory(), widgetFolder);
 if (!fm.fileExists(offlinePath)) fm.createDirectory(offlinePath);
 contactsFile = fm.joinPath(offlinePath,'contacts.json');
+if (!fm.isFileDownloaded(contactsFile) && fileExists(contactsFile)) fm.downloadFileFromiCloud(contactsFile);
+
 contactList = JSON.parse(fm.readString(contactsFile));
 widget = await createWidget(contactList);
 
@@ -169,13 +180,11 @@ async function createWidget(contacts){
     const imagePath = fm.joinPath(offlinePath,"images");
 
     let dynamicBCG, dynamicText, lightText, darkText, lightBCG, darkBCG;
-    // Discard invalid values from ITEMS_TO_SHOW array
-    ITEMS_TO_SHOW = ITEMS_TO_SHOW.filter(i => Object.keys(itemList).some(o => o === i))
     if (NO_OF_ITEMS_TO_SHOW == 1) NO_OF_ITEMS_TO_SHOW = 2; // single item spoils the layout -- need to figure this out
     if (NO_OF_ITEMS_TO_SHOW > 3) NO_OF_ITEMS_TO_SHOW = 3;
     contactsList = Object.keys(contacts);
     // Get background colors based on theme used
-    [lightBCG, darkBCG, lightText, darkText] = getBcgColors();
+    [lightBCG, darkBCG, lightText, darkText, widgetPosition] = getBcgColors();
 
     if (WIDGET_NO > 1) START_NO = ((WIDGET_NO - 1) * MAX_CONTACTS);
     else START_NO = 0;
@@ -246,7 +255,9 @@ async function createWidget(contacts){
 
     const widget = new ListWidget();
     widget.setPadding(0,0,0,0);
-    widget.backgroundColor = Color.dynamic(new Color(lightBCG), new Color(darkBCG))
+    // widget.backgroundColor = Color.dynamic(new Color(lightBCG), new Color(darkBCG))
+    if (THEME == "transparent") widget.backgroundImage = await nobg.getSlice(widgetPosition);
+    else widget.backgroundColor = Color.dynamic(new Color(lightBCG), new Color(darkBCG))
     let mainStack0 = widget.addStack();
 
     if (widgetType == "large") {
@@ -280,6 +291,7 @@ async function createWidget(contacts){
         let lastName = contacts[c].familyName;
         let em = contacts[c].emailID;
         let tw = contacts[c].twitter;
+        let quickActions = contacts[c].quickActions;
         let radiusDelta = 10;
 
         // Create main stack
@@ -289,7 +301,7 @@ async function createWidget(contacts){
         stack0.layoutVertically();
         stack0.addSpacer()
   
-        stack0.backgroundColor = dynamicBCG;
+        if (THEME != 'transparent') stack0.backgroundColor = dynamicBCG;
         // STACK 1 - For Name
         let nameStack = stack0.addStack();
         nameStack.layoutHorizontally();
@@ -321,6 +333,7 @@ async function createWidget(contacts){
         } else if (AVATAR_STYLE == "contact"){
             imageName = fm.joinPath(imagePath,c + ".png");
             if (fm.fileExists(imageName)) {
+                if (!fm.isFileDownloaded(imageName)) fm.downloadFileFromiCloud(imageName);
                 avatar = fm.readImage(imageName);
                 n = avatarStack.addImage(avatar);
                 n.minimumScaleFactor = 0.5;
@@ -354,9 +367,9 @@ async function createWidget(contacts){
         if (SHOW_GUIDES) bottomStack.backgroundColor = Color.yellow();
         
         // Remove all quick actions which are not applicable
-        itemsToShow = ITEMS_TO_SHOW;
-        if (em == "0") itemsToShow = ITEMS_TO_SHOW.filter(function(it,idx,arr) {return eval(`itemList.${it}.use`) !== 'email'})
-        if (tw == "0") itemsToShow = ITEMS_TO_SHOW.filter(function(it,idx,arr) {return eval(`itemList.${it}.use`) !== 'twitter'})
+        itemsToShow = quickActions;
+        if (em == "0") itemsToShow = itemsToShow.filter(function(it,idx,arr) {return eval(`itemList.${it}.use`) !== 'email'})
+        if (tw == "0") itemsToShow = itemsToShow.filter(function(it,idx,arr) {return eval(`itemList.${it}.use`) !== 'twitter'})
 
         itemsToShow.slice(0,NO_OF_ITEMS_TO_SHOW).forEach(function(itemName){
             toUse = eval(`itemList.${itemName}.use`);
@@ -439,14 +452,31 @@ function drawIcon(text, bcgColor, textColor){
 }
 
 function getBcgColors(){
-    validThemes = Object.keys(allColors);
+    let widgetPosition = `${widgetType}-${WIDGET_POSITION}`;
+    const validPositions = {
+      "small": ["small-top-left","small-top-right","small-middle-left","small-middle-right","small-bottom-left","small-bottom-right"],
+      "medium": ["medium-top","medium-middle","medium-bottom"],
+      "large": ["large-top","large-bottom"]
+    }
+    if (THEME == "transparent") {
+      try {
+        nobg = importModule('no-background');
+        widgetPosition = eval(`validPositions.${widgetType}`).includes(`${widgetPosition}`) ? widgetPosition: eval(`validPositions.${widgetType}`)[0];
+        writeLOG("Valid widget position " + widgetPosition);
+      }
+      catch(error) {
+        writeLOG(`Module no-background missing, defaulting the theme to ${DEFAULT_THEME}`)
+        THEME = DEFAULT_THEME;
+      }
+    }
+    const validThemes = Object.keys(allColors);
     THEME = validThemes.includes(THEME) ? THEME : "white";
     color = eval(`allColors.${THEME}`)
     darkBCG = color[0];
     lightBCG = color[1];
     darkText = color[2];
     lightText = color[3];
-    return [lightBCG, darkBCG, lightText, darkText];
+    return [lightBCG, darkBCG, lightText, darkText, widgetPosition];
 }
 
 function getDynamicColors(itemNo){
@@ -512,7 +542,8 @@ async function loadContacts(){
             if (twitterProfile.length > 0) {
                 twitter = twitterProfile[0].username;
             } else twitter = "0";
-            contactList[f.identifier] = {givenName: f.givenName, familyName: f.familyName, sfSymbol: CONTACTS_SYMBOL_STYLE, nickName: f.nickName, phoneNumber: phoneNumber, emailID: emailID, twitter: twitter};  
+            quickActions=addAndValidateActions(f.socialProfiles);
+            contactList[f.identifier] = {givenName: f.givenName, familyName: f.familyName, sfSymbol: CONTACTS_SYMBOL_STYLE, nickName: f.nickName, phoneNumber: phoneNumber, emailID: emailID, twitter: twitter, quickActions: quickActions};  
         }
         try {
             if (f.isImageAvailable || f.image !== null) {
@@ -541,7 +572,17 @@ async function loadContacts(){
     })
     fm.writeString(contactsFile, JSON.stringify(contactList));
 }
-
+function addAndValidateActions(profiles){
+    // Find out if there is a specific preference for this contact
+    // Social Profile "SCRIPTABLE" is used. Value is comma separated in the form whatsapp,facetimeAudio 
+    const PROFILE_NAME = "SCRIPTABLE";
+    let filteredProfile = [];
+    filteredProfile = profiles.filter(p => p.service.replace(/\s*/g,"").toUpperCase() === PROFILE_NAME);
+    actions = filteredProfile[0].username.replace(/\s*/g,"").split(',').concat(ITEMS_TO_SHOW);
+    actions = actions.filter(i => Object.keys(itemList).some(o => o === i))
+    uniqueActions = [...new Set(actions)];
+    return uniqueActions
+}
 async function writeLOG(logMsg){
     if (!config.runsInApp && LOG_TO_FILE) {
       const fm = FileManager.iCloud();
