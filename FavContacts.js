@@ -195,7 +195,8 @@ async function createWidget(contacts){
         [dynamicBCG, dynamicText] = getDynamicColors(1);
         const widget = new ListWidget();
         widget.setPadding(5,5,5,5);
-        widget.backgroundColor = dynamicBCG;
+        if (THEME == "transparent") widget.backgroundImage = await nobg.getSlice(widgetPosition);
+        else widget.backgroundColor = Color.dynamic(new Color(lightBCG), new Color(darkBCG))
         widget.addSpacer();
         widget.url = "https://github.com/ajatkj/scriptable#favcontacts";
         t = widget.addText("Set-up your contact list. Click here for more details.");
@@ -215,7 +216,8 @@ async function createWidget(contacts){
             large: {lines: ['You don\'t need ', '_widgetNo_ _widgetType_ widgets!!', '','You have favourited', 'only _contacts_ contacts.'], size: 26},
         }
         const widget = new ListWidget();
-        widget.backgroundColor = dynamicBCG;
+        if (THEME == "transparent") widget.backgroundImage = await nobg.getSlice(widgetPosition);
+        else widget.backgroundColor = Color.dynamic(new Color(lightBCG), new Color(darkBCG))
         const stack = widget.addStack();
         stack.layoutVertically();
         stack.setPadding(5,5,5,5);
@@ -247,9 +249,12 @@ async function createWidget(contacts){
             contacts[key] = {};
             contacts[key]["givenName"] = unknownFirstNames[i];
             contacts[key]["familyName"] = unknownSecondNames[i];
+            contacts[key]["nickName"] = unknownFirstNames[i];
             contacts[key]["phoneNumber"] = "0";
             contacts[key]["emailID"] = "0";
+            contacts[key]["twitter"] = "0";
             contacts[key]["sfSymbol"] = "exclamationmark.circle.fill";
+            contacts[key]["quickActions"] = ["message","whatsapp"];
         }
     }
 
@@ -578,7 +583,11 @@ function addAndValidateActions(profiles){
     const PROFILE_NAME = "SCRIPTABLE";
     let filteredProfile = [];
     filteredProfile = profiles.filter(p => p.service.replace(/\s*/g,"").toUpperCase() === PROFILE_NAME);
-    actions = filteredProfile[0].username.replace(/\s*/g,"").split(',').concat(ITEMS_TO_SHOW);
+    try {
+        actions = filteredProfile[0].username.replace(/\s*/g,"").split(',').concat(ITEMS_TO_SHOW);
+    } catch (e) {
+        actions = ITEMS_TO_SHOW;
+    }
     actions = actions.filter(i => Object.keys(itemList).some(o => o === i))
     uniqueActions = [...new Set(actions)];
     return uniqueActions
