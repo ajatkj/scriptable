@@ -1,19 +1,24 @@
 # Table of Contents
-- [LSWeather](#lsweather)
-- [LSForecast](#lsforecast)
-- [FavContacts](#favcontacts)
+
+- [LSWeather](##lsweather)
+- [LSForecast](##lsforecast)
+- [FavContacts](##favcontacts)
+- [LSMatrix](##lsmatrix)
+
 ___
 
-# LSWeather
+## LSWeather
+
 A Scriptable script to add weather & calendar information on the lock screen. The script is meant to be called from Shortcuts app.
 It is fully customizable script giving you access to change each data element on the lock screen. 
 The script generates an overlay image which is embedded on top of a wallpaper.
 
-![](images/LSWeather.png) ![](images/LSWeather_welcome.png)
-![](images/LSWeather_showMyWork.png) ![](images/LSWeather_feelMotivated.png)
-![](images/LSWeather_minimalCalendar.png) ![](images/LSWeather_maximalWeather.png)
+![LSWeather](images/LSWeather.png) ![LSWeather_welcome](images/LSWeather_welcome.png)
+![LSWeather_showMyWork](images/LSWeather_showMyWork.png) ![LSWeather_feelMotivated](images/LSWeather_feelMotivated.png)
+![LSWeather_minimalCalendar](images/LSWeather_minimalCalendar.png) ![LSWeather_maximalWeather](images/LSWeather_maximalWeather.png)
 
-## Features
+### Features - LSWeather
+
 1. Shows weather, calendar and random quote on the lock screen.
 1. Fully automated. Create Automations to run this script/shortcut every hour to get most recent information on your lock screen without manual intervention.
 1. Choose from many pre-defined layouts or create your own layout.
@@ -29,14 +34,17 @@ The script generates an overlay image which is embedded on top of a wallpaper.
 1. Run in *test* mode without calling various APIs
 1. Compatible with almost all devices running iOS 14.4+. The Shortcut can handle any resolution wallpaper.
 
-## Installation
+### Installation - LSWeather
+
 1. Download and extract the content of this repository.
 1. Download the script `LSWeather.js` to **Scriptable** folder in your iCloud Drive.
+
+```javascript
+    iCloud Drive/
+    ├─ Scriptable/
+    │  ├─ LSWeather.js
 ```
-iCloud Drive/
-├─ Scriptable/
-│  ├─ LSWeather.js
-```
+
 1. Launch Scriptable and make sure that `LSWeather` is listed in the Scripts view.
 1. Run the script to check if its working properly. A quicklook window with the default layout overlay will open.
 1. Configure wallpapers. You can use either Photos Album or iCloud Folder to use as source of wallpapers
@@ -52,16 +60,18 @@ iCloud Drive/
 1. Configure the shortcut as mentioned below.
 1. Run the shortcut.
 
-## Shortcut Configuration
-1. Open the shortcut in Shortcuts app. 
+### Shortcut Configuration - LSWeather
+
+1. Open the shortcut in Shortcuts app.
 1. Set the dictionary key value `layout` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'minimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
 1. Set the dictionary key value `apiKey` to your openWeather API key.
    - Note: if `layout` and `apiKey` are not passed from Shortcuts app, it should be defined in the LSWeather script.
 1. You can use either Photos Album or iCloud Folder to pick wallpapers for this script. To change that, look for the dictionary with `Photos` and `iCloud` boolean values and set either of them to `true`. Default is Photos.
 
-## Script Configuration
+### Script Configuration - LSWeather
+
 1. OpenWeather API
-   - Open the script in the Scriptable editor and add your openweather API key at `const WEATHER_API_KEY = `
+   - Open the script in the Scriptable editor and add your openweather API key at `const WEATHER_API_KEY=`
    - Get your own API key for free [here](https://home.openweathermap.org/api_keys). Account is needed.
    - Note: Value passed from Shortcuts app will over-ride the API key value set in the script.
 
@@ -69,7 +79,7 @@ iCloud Drive/
    - Set `LAYOUT` to one of the predefined values `'welcome'`, `'minimalWeather'`, `'feelMotivated'`, `'minimalCalendar'`, `'showMyWork'` and `'maximalWeather'`.
    - Or use your customer layout by setting `LAYOUT = 'custom'`.
    - Note: Value passed from Shortcuts app will over-ride values set in the script.
-   
+
 1. Configure Weather Details
    - To show/hide weather details set `WEATHER_SHOW_WEATHER` to `true` or `false`. Hiding weather details will not call the openweather API.
    - To change weather units set `WEATHER_UNITS`. Default is `metric`.
@@ -98,7 +108,7 @@ iCloud Drive/
      - Leave blank to get random quote across all categories.
      - You can get list of all valid tags [here](https://api.quotable.io/tags).
    - To change maximum length of quotes to be fetched set `QUOTE_MAX_LENGTH`.
-   - To change quotes wrap length set `QUOTE_WRAP_LENGTH`. 
+   - To change quotes wrap length set `QUOTE_WRAP_LENGTH`.
 
 1. Configure Update Notification
    - Whenever an update is available on GitHub, a red update notification will appear on the top right corner. 
@@ -131,12 +141,12 @@ iCloud Drive/
    - To generate logs in the iCloud drive when script is run through shortcut set `LOG_TO_FILE` to `true`. Only set this to true to debug an issue.
    - Check script logs in **LSWeatherLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
 
-## APIs Used
+### APIs Used - LSWeather
 
 1. OpenWeather API - [https://openweathermap.org](https://openweathermap.org).
 1. Quotable API - [https://github.com/lukePeavey/quotable](https://github.com/lukePeavey/quotable).
 
-## Credits
+### Credits - LSWeather
 
 Below widgets/scripts have helped while coding for this script.
 
@@ -145,26 +155,30 @@ Below widgets/scripts have helped while coding for this script.
 1. [termiWidget](https://gist.github.com/spencerwooo/7955aefc4ffa5bc8ae7c83d85d05e7a4).
 1. Thanks to user [schl3ck](https://talk.automators.fm/u/schl3ck) for the code to tint SF symbols in drawContext which is currently not possible in Scriptable.
 
-## Known Issues
+### Known Issues - LSWeather
 
 1. The API quotable is sometimes slow and doesn't respond on time. You can set `const QUOTE_SHOW_QUOTES = 'false'` to stop using this API if you are facing this problem.
 
 ___
 
-# LSForecast
+## LSForecast
+
 A Scriptable script to add weather forecast to your lock screen. The script is meant to be called from Shortcuts app.
 The script generates an overlay image which is embedded on top of a wallpaper.
 
-![](images/LSForecast.png) ![](images/LSForecast_POP_Night.png)
+![LSForecast](images/LSForecast.png) ![LSForecast_POP_Night](images/LSForecast_POP_Night.png)
 
-## Installation
+### Installation - LSForecast
+
 1. Download and extract the content of this repository.
 1. Download the script `LSForecast.js` to **Scriptable** folder in your iCloud Drive.
+
+```javascript
+    iCloud Drive/
+    ├─ Scriptable/
+    │  ├─ LSForecast.js
 ```
-iCloud Drive/
-├─ Scriptable/
-│  ├─ LSForecast.js
-```
+
 1. Launch Scriptable and make sure that `LSForecast` is listed in the Scripts view.
 1. Run the script to check if its working properly. A quicklook window with the default layout overlay will open.
 1. Configure wallpapers. You can use either Photos Album or iCloud Folder to use as source of wallpapers
@@ -180,7 +194,7 @@ iCloud Drive/
 1. Configure the shortcut as mentioned below.
 1. Run the shortcut.
 
-## Shortcut Configuration
+### Shortcut Configuration - LSForecast
 
 1. Open the shortcut in Shortcuts app. 
 1. Set the dictionary key value `accent` to hexadecimal color code e.g. #FF00FF.
@@ -189,7 +203,7 @@ iCloud Drive/
    - Note: if `apiKey` is not passed from Shortcuts app, it should be defined in the LSForecast script.
 1. You can use either Photos Album or iCloud Folder to pick wallpapers for this script. To change that, look for the dictionary with `Photos` and `iCloud` boolean values and set either of them to `true`. Default is Photos.
 
-## Script Configuration
+### Script Configuration - LSForecast
 
 1. To show/hide weather icons for hourly forecast set `WEATHER_SHOW_HOURLY_ICONS` to either `true` or `false`
 1. To show/hide POP (probability of precipitation graph) hourly forecast set `WEATHER_SHOW_POP_GRAPH` to either `true` or `false`
@@ -199,39 +213,40 @@ iCloud Drive/
 1. To generate logs when script is run through shortcut set `LOG_TO_FILE` to `true`. Only set this to true to debug an issue.
 1. Check script logs in **LSForecastLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
 
-## Languages Supported
+### Languages Supported - LSForecast
+
 1. English (en), Portuguese (pt), Spanish (es), French (fr), German (de), Hindi (hi).
    - Translations are done using google translate so might not be accurated.
 1. Raise an issue in GitHub or email me at <ajatkj@yahoo.co.in> to fix a translation issue or add translation for new language.
 
-## APIs Used
+### APIs Used - LSForecast
 
 1. OpenWeather API - [https://openweathermap.org](https://openweathermap.org).
 
 ___
 
-# FavContacts
+## FavContacts
 
 A Scriptable Favourite Contact's widget to quickly call, message, facetime & more your favourite contacts.
 Widgets are available in all 3 sizes.
 
 ![FavContactsWidgets](images/FavContactsWidgets.png)
 
-## Installation
+### Installation - FavContacts
 
 1. Download and extract the content of this repository.
 1. Download the script `FavContacts.js` to **Scriptable** folder in your iCloud Drive.
 
-```
-iCloud Drive/
-├─ Scriptable/
-│  ├─ FavContacts.js
+```javascript
+    iCloud Drive/
+    ├─ Scriptable/
+    │  ├─ FavContacts.js
 ```
 
 1. Launch Scriptable and make sure that `FavContacts` is listed in the Scripts view.
 1. Run the script to check if its working properly. A quicklook widget with the default settings will open.
 
-## Features
+### Features - FavContacts
 
 1. Call, message, facetime, mail, whatsapp, telegram your favourite people directly from home screen.
 1. You can set up-to 4 actions (including the default action to call when you click on the avatar).
@@ -242,7 +257,7 @@ iCloud Drive/
 1. Supports customizable quick actions per widget (See Set-up Favourites section). 
 Note: Due to iOS restrictions, any action on Widget will first call scriptable app and then call the respective action. 
 
-## Set-up Favourties
+### Set-up Favourties - FavContacts
 
 There are 3 ways to set-up favourite contacts list. Listing them here in order of preference.
 
@@ -258,7 +273,7 @@ There are 3 ways to set-up favourite contacts list. Listing them here in order o
 1. For custom quick action per contact, use the **Scriptable** service to give custom actions as shown below.  
    ![FavContactsCustomActions](images/FavContactsCustomActions.jpg)
 
-```
+```javascript
 let allcontacts = [
     {firstname: 'Firstname', lastname: 'Lastname'},
     {firstnmae: 'Another', lastname: 'Contact'},
@@ -268,7 +283,7 @@ let allcontacts = [
 1. Run the script in-app to update the contacts cache which is used to show contacts on the widget.
 1. **Note: You will need to run the script *in-app* everytime you make any changes to contact list using either of the 3 options above**
 
-## Script Configuration
+### Script Configuration - FavContacts
 
 1. To show/hide contact names set `SHOW_NAMES` to either `true` or `false`.
 1. Choose different avatar styles ("contact", "symbol" or "initials") by setting `AVATAR_STYLE`.
@@ -287,7 +302,7 @@ let allcontacts = [
    - Twitter
    - Tweetbot
    - Twitterrific
-   * Note: to use twitter quick action, set Social Profile for "Twitter" with users twitter handle.
+   - **Note: to use twitter quick action, set Social Profile for "Twitter" with users twitter handle.**
 
    ![FavContactsTwitter](images/FavContactsTwitter.png)
 
@@ -297,7 +312,7 @@ let allcontacts = [
 
 ![FavContactsMinimal](images/FavContactsMinimal.png)
 
-## Widget Configuration
+### Widget Configuration - FavContacts
 
 1. Add multiple widgets by passing widget no. in widget arguments.  
    - No argument or widget no. 0 defaults to 1st widget  
@@ -320,10 +335,78 @@ let allcontacts = [
 
 ![FavContactsSettings](images/FavContactsSettings.png) ![FavContactsSettings](images/FavContactsSettingsTransparent.png)
 
-## Themes
+### Themes - FavContacts
 
 ![FavContactsThemes](images/FavContactsThemes.png)
 
 Theme names should be in *camelCase*. Ex. **Sailor Blue Mint** is **sailorBlueMint** and so on.
 
 Note: Some themes are inspired by Moleskine Studio's Timepage app. Must download app!
+
+___
+
+## LSMatrix
+
+A Scriptable script to generate Matrix style wallpapers for your lock screen.
+The script is embedded in the Shortcuts app. In standalone mode, weather details will not be fetched.
+
+![LSMatrix_Dark](images/LSMatrix_Dark.png) ![LSMatrix_Light](images/LSMatrix_Light.png)
+
+### Features - LSMatrix
+
+1. The script displays 1 of many famous quotes from the Matrix Trilogy movies. You can choose to turn if off.
+1. Show current weather details.
+1. Show upcoming events and configure no. of events to be displayed.
+1. Show/hide all-days events.
+1. Change the background style to use either binary (0's & 1's) or use the original Matrix style [half-width kana](https://en.wikipedia.org/wiki/Half-width_kana).
+1. Enable/disable cryptic style text (with this enabled, some of the letters are changed at random to use greek letters).
+1. Supports both dark & light wallpapers (can be system driven or override at Shortcut level)
+1. Choose from 24 or 12 hour time format.
+1. Show last updated time.
+1. Very easily configurable.
+
+### Dependencies - LSMatrix
+
+1. If your system font uses any multi-byte characters (like Hindi) you will need to download the package **GraphemeSplitter** included in my repo to display text correctly on the screen.
+1. This package is **not** developed by me, I have merely included it my repository by making minor changes to be able to use in Scriptable.
+1. Please give credit to [orling](https://github.com/orling/grapheme-splitter) on GitHub by starring his repo.
+1. If the package is not downloaded, each byte of the character will be splitted and displayed on the wallpaper.
+
+### Installation - LSMatrix
+
+1. The script is embedded in the Shortcut so you don't need to actually download the script (unless you want to check it out).
+1. Download and install this [shortcut](https://routinehub.co/shortcut/8815/).
+1. Set-up Shortcut Automation to run the Shortcut at regular intervals.
+1. Carry on further if you want to run the script in Scriptable in standalone mode (Note: in this mode weather details will not be fetched).
+1. Download the script `LSMatrix.js` to **Scriptable** folder in your iCloud Drive.
+
+```javascript
+    iCloud Drive/
+    ├─ Scriptable/
+    │  ├─ LSMatrix.js
+```
+
+1. Launch Scriptable and make sure that `LSMatrix` is listed in the Scripts view.
+1. Run the script to check if its working properly. A quicklook window with Matrix wallpaper will open.
+
+### Shortcut Configuration - LSMatrix
+
+![LSMatrix_Shortcut_Config](images/LSMatrix_Shortcut_Config.png)
+
+### Script Configuration - LSMatrix
+
+1. To show/hide movie quotes set `SHOW_QUOTES` to either `true` or `false`
+1. To show/hide last updated time `SHOW_LAST_UPDATED` to either `true` or `false`
+1. To show/hide weather datails set `SHOW_WEATHER` to either `true` or `false`
+1. To show/hide cryptic text for all screen data, set `CRYPTIC_TEXT` to either `true` or `false`
+1. Configure calendars to display by setting `CALENDAR_NAMES` array. Set this to blank or `[]` to show all calendars.
+1. To limit no. of upcoming calendar events to display, set `CALENDAR_MAX_EVENTS`. Value 0 is to hide all calendar events.
+1. To show/hide all day events set `CALENDAR_SHOW_ALL_DAY_EVENTS` to either `true` or `false`
+1. Switch between dark & light wallpapers by setting `DARK_MODE` to `true` or `false`. To use system appearance set `SYSTEM_DARK_MODE` to `true`.
+1. To generate binary style wallpaper, set `BINARY_MODE` to `true`. Default is `false` which will use original Matrix style font.
+
+### Languages Supported - LSMatrix
+
+1. English (en), Portuguese (pt), Spanish (es), French (fr), German (de), Hindi (hi).
+   - Translations are done using google translate so might not be accurated.
+1. Raise an issue in GitHub or email me at <ajatkj@yahoo.co.in> to fix a translation issue or add translation for new language.
