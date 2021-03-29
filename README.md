@@ -1,9 +1,9 @@
 # Table of Contents
 
-- [LSWeather](##lsweather)
-- [LSForecast](##lsforecast)
-- [FavContacts](##favcontacts)
-- [LSMatrix](##lsmatrix)
+- [LSWeather](#lsweather)
+- [LSForecast](#lsforecast)
+- [FavContacts](#favcontacts)
+- [LSMatrix](#lsmatrix)
 
 ___
 
