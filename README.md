@@ -5,6 +5,7 @@
 - [FavContacts](#favcontacts)
 - [LSMatrix](#lsmatrix)
 
+Note: all shortcuts are updated to now run on iOS 15. Download using the links below.
 ___
 
 ## LSWeather
