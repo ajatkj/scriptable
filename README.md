@@ -138,6 +138,7 @@ The script generates an overlay image which is embedded on top of a wallpaper.
    - [x] hide: 0 or null to show this data element, 1 to hide, 2 for sunrise/sunset only (to show only 1 of them based on the time of the day).
    - [x] bold: make text bold. Valid values are true or false.
 
+
 1. Logging
    - To generate logs in the iCloud drive when script is run through shortcut set `LOG_TO_FILE` to `true`. Only set this to true to debug an issue.
    - Check script logs in **LSWeatherLogs** folder in iCloud/Scriptable (logs are only saved to file when the script is run from Shortcuts, else logs are displayed on the console).
