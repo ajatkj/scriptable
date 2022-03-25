@@ -4,6 +4,7 @@
 - [LSForecast](#lsforecast)
 - [FavContacts](#favcontacts)
 - [LSMatrix](#lsmatrix)
+- [LSQuotes](#lsquotes)
 
 Note: all shortcuts are updated to now run on iOS 15. Download using the links below.
 ___
@@ -412,3 +413,56 @@ The script is embedded in the Shortcuts app. In standalone mode, weather details
 1. English (en), Portuguese (pt), Spanish (es), French (fr), German (de), Hindi (hi).
    - Translations are done using google translate so might not be accurated.
 1. Raise an issue in GitHub or email me at <ajatkj@yahoo.co.in> to fix a translation issue or add translation for new language.
+
+___
+
+## LSQuotes
+
+A Scriptable script to add a random quote or a custom quote on your lockscreen.
+The script is embedded in the Shortcuts app. In standalone mode you will only see an overlay.
+
+![LSQuotes_1](images/LSQuotes_1.png) ![LSQuotes_2](images/LSQuotes_2.png)
+
+### Features - LSQuotes
+
+1. Display a random quote from api.quotable.com
+1. You can choose from dozens of categories or all categories
+1. Use a custom quote to remind yourself about important things in life
+1. Very easily configurable.
+
+### Installation - LSQuotes
+
+1. Download and extract the content of this repository.
+1. Download the script `LSQuotes.js` to **Scriptable** folder in your iCloud Drive.
+
+```javascript
+    iCloud Drive/
+    ├─ Scriptable/
+    │  ├─ LSQuotes.js
+```
+
+1. Launch Scriptable and make sure that `LSQuotes` is listed in the Scripts view.
+1. Run the script to check if its working properly. A quicklook window with the default layout overlay will open.
+1. Configure wallpapers. You can use either Photos Album or iCloud Folder to use as source of wallpapers
+   - Photos Album
+     - Create an Album in Photos with name **Wallpapers**.
+     - Add *some* wallpapers to this Album.
+     - Shortcut will automatically pick up a wallpaper at random from this album.
+   - iCloud Folder
+     - Create a folder in iCloud -> Shortcuts with the name **Wallpapers**.
+     - Add *some* wallpapers to this folder.
+     - Shortcut will automatically pick up a wallpaper at random from this folder.
+1. Download and install this [shortcut](https://routinehub.co/shortcut/11402/).
+1. Configure the shortcut as mentioned below.
+1. Run the shortcut.
+
+### Shortcut Configuration - LSQuotes
+
+![LSMatrix_Shortcut_Config](images/LSQuotes_Shortcut_Config.jpg)
+
+### Script Configuration - LSQuotes
+
+1. To change the text size, set `TEXT_SIZE` to `small`, `medium` or `large`
+1. To use dark box with light text set `DARK_MODE` to either `true` else `false`
+1. Configure categories setting `QUOTE_TAGS_DICTIONARY` dictionary. Go to [this](https://api.quotable.io/tags) link to get list of available tags/categories.
+1. To limit no. of characters in a quote, set `QUOTE_MAX_LENGTH`.
