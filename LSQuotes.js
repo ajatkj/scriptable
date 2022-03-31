@@ -5,8 +5,12 @@
 Script: LSQuotes.js
 Author: Ankit Jain (<ajatkj@yahoo.co.in>)
 Date: 25.03.2022
-Version: 1.0
+Version: 1.1
 Purpose: This script generates an overlay with a quotes (from api)
+*/
+/* Change Log 
+31.03.2022 - Add support for multi-byte characters (depends on external module GraphemeSplitter)
+             Download from https://github.com/orling/grapheme-splitter and leave a star!!
 */
 
 const LOG_FILE_PATH = "LSQuotesLogs";
@@ -27,10 +31,10 @@ const BASE_QUOTES_URL='https://api.quotable.io/random';
 let TEXT_SIZE = 'small'
 let DARK_MODE = true;
 let CUSTOM_QUOTE = null
-let DEFAULT_QUOTE = "Be the change you want to see in the world!"
-let CUSTOM_QUOTE_FLAG = false
+let DEFAULT_QUOTE = "😀Be the change you want to see in the world!"
+let CUSTOM_QUOTE_FLAG = true
 let QUOTE_MAX_LENGTH = 50
-let QUOTE_TAGS_DICTIONARY = {'all': true}
+let QUOTE_TAGS_DICTIONARY = {'business': true, 'wisdom': false, 'faith': false}
 
 if (!config.runsInApp) {
     let input = args.shortcutParameter;
@@ -55,6 +59,15 @@ if (DARK_MODE) {
 } else {
     BG = '#F4FAFA'
     FG = '#000000'
+}
+const REGEX = /[^\u0000-\u00ff]/; 
+// Import grapheme-splitter to split unicode string containing multiple diaeresis
+splitModulePresent = false;
+try {
+    graphemeSplitter = importModule('GraphemeSplitter')
+    splitModulePresent = true;
+} catch (error) {
+    splitModulePresent = false;
 }
 
 let TEXT_WIDTH = SIZES[TEXT_SIZE].width;
@@ -136,7 +149,10 @@ function print(imgCanvas,line,x,y){
     space = ' '
     gap = 5
     roundedRect = createRoundedRect(TEXT_WIDTH,TEXT_HEIGHT)
-    chars = line.replace(/^\s+|\s+$/gm,'').toUpperCase().split("");
+    // To split unicode characters you need special libraries
+    if (containsDoubleByte(line) && splitModulePresent) chars = graphemeSplitter.splitGraphemes(line.toUpperCase());
+    else chars = line.replace(/^\s+|\s+$/gm,'').toUpperCase().split("");
+    
     if (x == "center") x = Math.round((TEXT_COLS - chars.length)/2) * (TEXT_WIDTH+gap);
     chars.forEach(function(ch){
         if (ch != space) imgCanvas.drawImageInRect(roundedRect,new Rect(x,y,TEXT_WIDTH,TEXT_HEIGHT));
@@ -197,4 +213,10 @@ async function writeLOG(logMsg){
     fm.writeString(logFile, logMsg);
   } else console.log ("Step_" + LOG_STEP + ": " + logMsg);
   LOG_STEP++;
+}
+
+function containsDoubleByte(str) {
+    if (!str.length) return false;
+    if (str.charCodeAt(0) > 255) return true;
+    return REGEX.test(str);
 }
